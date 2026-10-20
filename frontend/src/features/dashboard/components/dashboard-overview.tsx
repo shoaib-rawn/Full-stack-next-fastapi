@@ -1,0 +1,137 @@
+"use client";
+
+import Link from "next/link";
+
+import {
+  ConceptStep,
+  MiniFetch,
+  MiniOneQuery,
+  MiniSession,
+} from "@/components/concept-visuals";
+import { RequestAnimation } from "@/components/request-animation";
+import { useCustomers } from "@/features/customers/hooks";
+
+type DashboardOverviewProps = {
+  fullName: string;
+  email: string;
+  role: string;
+};
+
+export function DashboardOverview({
+  fullName,
+  email,
+  role,
+}: DashboardOverviewProps) {
+  const customers = useCustomers(1, 5);
+
+  return (
+    <div className="mx-auto max-w-7xl">
+      <section className="grid overflow-hidden rounded-[1.75rem] border-2 border-[#72c8f1] bg-white shadow-[0_8px_0_rgba(8,45,99,0.08)] lg:grid-cols-[1.15fr_0.85fr]">
+        <div className="bg-linear-to-br from-[#e5f6ff] via-white to-[#f4fbff] p-6 sm:p-8">
+          <span className="inline-flex rounded-md bg-[#1267c9] px-3 py-1 text-xs font-black uppercase tracking-wider text-white">
+            Live workspace
+          </span>
+          <h1 className="mt-4 text-3xl font-black tracking-tight text-[#082d63] md:text-5xl">
+            Welcome back, {fullName}
+          </h1>
+          <p className="mt-3 font-medium text-[#58718c]">
+            {email} <span className="px-2 text-[#1267c9]">•</span> {role}
+          </p>
+        </div>
+
+        <div className="bg-[#073979] p-6 text-white sm:p-8">
+          <p className="text-xs font-black uppercase tracking-widest text-[#ffd65a]">
+            What this page proves
+          </p>
+          <div className="mt-5 grid gap-3">
+            <ConceptStep number="1" title="Verify user" caption="Server side">
+              <MiniSession />
+            </ConceptStep>
+            <ConceptStep number="2" title="Real data" caption="TanStack Query">
+              <MiniFetch />
+            </ConceptStep>
+            <ConceptStep number="3" title="One query" caption="Totals + recent">
+              <MiniOneQuery />
+            </ConceptStep>
+          </div>
+        </div>
+      </section>
+
+      <section className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <MetricCard number="01" label="Total customers" value={customers.isFetching ? "..." : String(customers.data?.total ?? 0)} tone="blue" />
+        <MetricCard number="02" label="Customer pages" value={customers.isFetching ? "..." : String(customers.data?.pages ?? 0)} tone="pink" />
+        <MetricCard number="03" label="Workspace role" value={role} tone="green" />
+      </section>
+
+      {/* The whole card is one link to the register; rows are not clickable. */}
+      <Link
+        href="/customers"
+        aria-label="Recent customers — open customer register"
+        className="group mt-6 block overflow-hidden rounded-3xl border-2 border-[#9bd884] bg-white shadow-[0_8px_0_rgba(8,45,99,0.07)] transition hover:-translate-y-0.5 hover:border-[#1267c9] hover:shadow-[0_12px_0_rgba(8,45,99,0.09)] focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-[#ffd65a]"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-4 bg-[#e8f8dc] px-5 py-4 sm:px-6">
+          <div>
+            <span className="rounded-md bg-[#cceeb7] px-2 py-1 text-xs font-black text-[#286e30]">RESULT</span>
+            <h2 className="mt-2 text-2xl font-black text-[#082d63]">Recent customers</h2>
+          </div>
+          <span className="rounded-xl bg-[#1267c9] px-4 py-2 text-sm font-black text-white shadow-[0_4px_0_#082d63] transition group-hover:bg-[#0759a8]">
+            Open customer register →
+          </span>
+        </div>
+
+        <div className="p-5 sm:p-6">
+          {customers.isFetching && <RequestAnimation flow="customers" />}
+
+          {customers.isError && (
+            <p className="rounded-xl bg-[#ffe3eb] p-4 font-bold text-[#a3234c]">Could not load customer summary.</p>
+          )}
+
+          {!customers.isFetching && customers.data?.items.length === 0 && (
+            <p className="rounded-xl border-2 border-dashed border-[#b9def0] p-7 text-center text-[#58718c]">No customers yet.</p>
+          )}
+
+          <div className="grid gap-3">
+            {!customers.isFetching && customers.data?.items.map((customer) => (
+              <div
+                key={customer.id}
+                className="rounded-2xl border-2 border-[#c9e6f4] bg-[#f7fcff] p-4"
+              >
+                <p className="font-black text-[#082d63]">{customer.display_name}</p>
+                <p className="mt-1 text-sm text-[#647d96]">{customer.email ?? "No email"}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Link>
+    </div>
+  );
+}
+
+function MetricCard({
+  number,
+  label,
+  value,
+  tone,
+}: {
+  number: string;
+  label: string;
+  value: string;
+  tone: "blue" | "pink" | "green";
+}) {
+  const colors = {
+    blue: "border-[#72c8f1] bg-[#e5f6ff]",
+    pink: "border-[#f4acc1] bg-[#ffe8ef]",
+    green: "border-[#9bd884] bg-[#e8f8dc]",
+  };
+
+  return (
+    <article className={`rounded-2xl border-2 p-5 shadow-[0_6px_0_rgba(8,45,99,0.07)] ${colors[tone]}`}>
+      <div className="flex items-center gap-3">
+        <span className="grid size-9 place-items-center rounded-full bg-[#1267c9] text-sm font-black text-white">{number}</span>
+        <p className="text-sm font-black text-[#496680]">{label}</p>
+      </div>
+      <p className="mt-4 text-3xl font-black capitalize text-[#082d63]">{value}</p>
+    </article>
+  );
+}
+

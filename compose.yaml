@@ -1,0 +1,40 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ledgerlite_postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: ledgerlite
+      POSTGRES_PASSWORD: ledgerlite_dev_password
+      POSTGRES_DB: ledgerlite
+
+    ports:
+      - "5434:5432"
+
+    volumes:
+      - ledgerlite_postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ledgerlite -d ledgerlite"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: ledgerlite_redis
+    restart: unless-stopped
+
+    ports:
+      - "6380:6379"
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+
+volumes:
+  ledgerlite_postgres_data:

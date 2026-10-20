@@ -1,0 +1,26 @@
+# Python
+backend/.venv/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Secrets
+backend/.env
+
+# Next.js
+frontend/node_modules/
+frontend/.next/
+
+# Local tooling
+.claude/
+/intent/
+/CLAUDE.md
+/frontend/AGENTS.md
+
+# The parent repository ignores every directory named `lib`. LedgerLite's
+# Next.js source utilities are application code and must be tracked.
+!/frontend/src/lib/
+!/frontend/src/lib/**
+
+# Miscellaneous
+*.log

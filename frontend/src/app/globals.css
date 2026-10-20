@@ -1,0 +1,126 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f5faff;
+  --foreground: #0b2e59;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+  margin: 0;
+  background-image:
+    radial-gradient(circle at 5% 5%, rgba(255, 214, 90, 0.22), transparent 20rem),
+    radial-gradient(circle at 95% 10%, rgba(103, 203, 245, 0.2), transparent 24rem);
+  background-attachment: fixed;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Request animation. Each step is scheduled with animation-delay so it runs
+   without JavaScript (server-streamed Suspense fallbacks are not hydrated). */
+@keyframes ll-travel {
+  from { left: 0%; opacity: 1; }
+  to { left: 100%; opacity: 1; }
+}
+
+/* Visible only during its window (duration + delay set inline). */
+@keyframes ll-window {
+  from, to { opacity: 1; }
+}
+
+@keyframes ll-light {
+  from { opacity: 0.4; }
+  to { opacity: 1; }
+}
+
+@keyframes ll-grow {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+
+@keyframes ll-fill {
+  from { opacity: 0.5; background-color: #e5eef4; }
+  to { opacity: 1; background-color: #72c8f1; }
+}
+
+.ll-window {
+  opacity: 0;
+  animation-name: ll-window;
+  animation-timing-function: linear;
+}
+
+.ll-ring {
+  box-shadow: 0 0 0 4px #ffd65a;
+}
+
+.ll-node {
+  animation: ll-light 250ms ease-out both;
+}
+
+.ll-grow {
+  width: 0%;
+  animation: ll-grow 300ms ease-out both;
+}
+
+.ll-fill {
+  animation: ll-fill 300ms ease-out both;
+}
+
+@keyframes ll-row-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+.ll-packet {
+  position: absolute;
+  top: 50%;
+  line-height: 1;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  animation-name: ll-travel;
+  animation-timing-function: ease-in-out;
+}
+
+.ll-row-in {
+  animation: ll-row-in 300ms ease-out both;
+}
+
+@keyframes ll-shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-5px); }
+  40%, 80% { transform: translateX(5px); }
+}
+
+.ll-shake {
+  animation: ll-shake 450ms ease-in-out 2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ll-packet,
+  .ll-row-in,
+  .ll-shake,
+  .ll-node,
+  .ll-grow,
+  .ll-fill {
+    animation: none;
+  }
+
+  .ll-grow {
+    width: 100%;
+  }
+}
+
+::selection {
+  background: #ffd65a;
+  color: #0b2e59;
+}
+

@@ -1,0 +1,229 @@
+/* Learning notebook styles (imported by the notebook components only). */
+
+
+/* Lined notebook paper with a red margin. */
+.nb-paper {
+  background-color: #fffdf6;
+  background-image:
+    linear-gradient(90deg, transparent 2.9rem, #f4a7b9 2.9rem, #f4a7b9 3rem, transparent 3rem),
+    repeating-linear-gradient(180deg, transparent 0, transparent 1.95rem, #dceaf5 1.95rem, #dceaf5 2rem);
+}
+
+/* Page turn: the new page swings in from the spine. */
+@keyframes nb-turn-next {
+  from { transform: perspective(1600px) rotateY(-75deg); opacity: 0; }
+  to { transform: perspective(1600px) rotateY(0); opacity: 1; }
+}
+
+@keyframes nb-turn-prev {
+  from { transform: perspective(1600px) rotateY(75deg); opacity: 0; }
+  to { transform: perspective(1600px) rotateY(0); opacity: 1; }
+}
+
+.nb-turn-next {
+  transform-origin: left center;
+  animation: nb-turn-next 650ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.nb-turn-prev {
+  transform-origin: right center;
+  animation: nb-turn-prev 650ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes nb-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+
+.nb-rise {
+  animation: nb-rise 500ms ease-out both;
+}
+
+@keyframes nb-float {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-10px) rotate(3deg); }
+}
+
+.nb-float {
+  animation: nb-float 4s ease-in-out infinite;
+}
+
+/* Flow diagram: packet rides the track, then fades and restarts. */
+@keyframes nb-ride {
+  0% { left: 0%; opacity: 0; }
+  6% { opacity: 1; }
+  80% { left: 100%; opacity: 1; }
+  90%, 100% { left: 100%; opacity: 0; }
+}
+
+.nb-ride {
+  position: absolute;
+  top: 50%;
+  translate: -50% -50%;
+  line-height: 1;
+  animation: nb-ride var(--nb-cycle, 4s) ease-in-out infinite;
+}
+
+/* A node glows briefly when the packet reaches it. */
+@keyframes nb-glow {
+  0% { box-shadow: 0 0 0 0 rgba(255, 214, 90, 0); transform: scale(1); }
+  4% { box-shadow: 0 0 0 6px rgba(255, 214, 90, 0.9); transform: scale(1.12); }
+  18% { box-shadow: 0 0 0 0 rgba(255, 214, 90, 0); transform: scale(1); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 214, 90, 0); transform: scale(1); }
+}
+
+.nb-glow {
+  animation: nb-glow var(--nb-cycle, 4s) ease-out infinite;
+}
+
+/* Track fill follows the packet. */
+@keyframes nb-track {
+  0% { width: 0%; }
+  80%, 100% { width: 100%; }
+}
+
+.nb-track {
+  animation: nb-track var(--nb-cycle, 4s) ease-in-out infinite;
+}
+
+/* Gate: one token passes through, the other bounces back. */
+@keyframes nb-pass {
+  0% { left: 0%; opacity: 0; }
+  10% { opacity: 1; }
+  45% { left: 100%; opacity: 1; }
+  55%, 100% { left: 100%; opacity: 0; }
+}
+
+@keyframes nb-bounce-back {
+  0%, 45% { left: 0%; opacity: 0; }
+  52% { opacity: 1; }
+  72% { left: 46%; opacity: 1; }
+  88% { left: 8%; opacity: 1; }
+  100% { left: 0%; opacity: 0; }
+}
+
+.nb-pass,
+.nb-block {
+  position: absolute;
+  top: 50%;
+  translate: -50% -50%;
+  line-height: 1;
+}
+
+.nb-pass {
+  animation: nb-pass 4s ease-in-out infinite;
+}
+
+.nb-block {
+  animation: nb-bounce-back 4s ease-in-out infinite;
+}
+
+@keyframes nb-gate-hit {
+  0%, 66% { transform: scale(1); }
+  72% { transform: scale(1.18) rotate(-6deg); }
+  80%, 100% { transform: scale(1); }
+}
+
+.nb-gate-hit {
+  animation: nb-gate-hit 4s ease-in-out infinite;
+}
+
+/* Cycle: a dot orbits the ring. */
+@keyframes nb-orbit {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.nb-orbit {
+  animation: nb-orbit var(--nb-cycle, 6s) linear infinite;
+}
+
+/* Code: highlighted lines pulse. */
+@keyframes nb-mark {
+  0%, 100% { background-color: rgba(255, 214, 90, 0.18); }
+  50% { background-color: rgba(255, 214, 90, 0.55); }
+}
+
+.nb-mark {
+  animation: nb-mark 2.4s ease-in-out infinite;
+}
+
+@keyframes nb-caret {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+.nb-caret {
+  animation: nb-caret 1s steps(1) infinite;
+}
+
+@keyframes nb-vs {
+  0%, 100% { transform: scale(1) rotate(-8deg); }
+  50% { transform: scale(1.15) rotate(8deg); }
+}
+
+.nb-vs {
+  animation: nb-vs 2.2s ease-in-out infinite;
+}
+
+/* Flashcard flip. */
+.nb-card {
+  transform-style: preserve-3d;
+  transition: transform 700ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.nb-card[data-flipped="true"] {
+  transform: rotateY(180deg);
+}
+
+.nb-face {
+  backface-visibility: hidden;
+}
+
+.nb-back {
+  transform: rotateY(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nb-turn-next,
+  .nb-turn-prev,
+  .nb-rise,
+  .nb-float,
+  .nb-ride,
+  .nb-glow,
+  .nb-track,
+  .nb-pass,
+  .nb-block,
+  .nb-gate-hit,
+  .nb-orbit,
+  .nb-mark,
+  .nb-caret,
+  .nb-vs {
+    animation: none;
+  }
+
+  .nb-track {
+    width: 100%;
+  }
+
+  .nb-card {
+    transition: none;
+  }
+}
+
+
+/* Vision page: a slowly turning colour ring around the author's photo. */
+@keyframes nb-spin {
+  to { transform: rotate(360deg); }
+}
+
+.nb-ring {
+  background: conic-gradient(from 0deg, #ffd65a, #1267c9, #d7344f, #159447, #ffd65a);
+  animation: nb-spin 8s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nb-ring {
+    animation: none;
+  }
+}
