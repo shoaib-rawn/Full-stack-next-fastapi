@@ -3,6 +3,8 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from app.core.limits import DB_ID_MAX
+
 
 class InvoiceLineItemCreate(BaseModel):
     description: str = Field(
@@ -25,7 +27,7 @@ class InvoiceLineItemCreate(BaseModel):
 
 
 class InvoiceCreate(BaseModel):
-    customer_id: int = Field(gt=0, examples=[1])
+    customer_id: int = Field(gt=0, le=DB_ID_MAX, examples=[1])
     currency: str = Field(
         default="PKR",
         min_length=3,
@@ -57,7 +59,7 @@ class InvoiceCreate(BaseModel):
 
 
 class InvoiceUpdate(BaseModel):
-    customer_id: int | None = Field(default=None, gt=0, examples=[1])
+    customer_id: int | None = Field(default=None, gt=0, le=DB_ID_MAX, examples=[1])
     currency: str | None = Field(
         default=None,
         min_length=3,

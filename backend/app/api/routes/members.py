@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies.auth import get_current_owner
+from app.api.dependencies.ids import DbId
 from app.api.dependencies.pagination import PaginationParams
 from app.core.security import hash_password
 from app.db.session import get_db_session
@@ -140,7 +141,7 @@ async def list_members(
     ),
 )
 async def update_member(
-    member_id: int,
+    member_id: DbId,
     payload: MemberUpdate,
     current_owner: Annotated[
         User,

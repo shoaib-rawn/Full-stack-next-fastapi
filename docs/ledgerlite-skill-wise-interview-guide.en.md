@@ -65,6 +65,7 @@ Do not memorize code. Understand the request journey and the decision behind eac
 | 42 | React 19, JSX, components, props, state and hooks | Implemented |
 | 43 | Installed vs actually implemented skills | Honest boundary documented |
 | 44 | Axios typed client, interceptors and refresh retry | Implemented |
+| 45 | Reporting aggregates, invoice filters and Chart.js | Implemented end-to-end |
 
 ---
 
@@ -2609,7 +2610,7 @@ rg -n 'websocket|socket.io' backend/app frontend/src
 | Pino | Not used; Python structured logging is used |
 | Stripe webhooks | Not implemented |
 | QuickBooks OAuth2 | Not implemented in LedgerLite |
-| Chart.js | Not implemented yet |
+| Chart.js | Implemented on the reports dashboard |
 | HTML Canvas | Not used |
 | Vitest/Jest/Supertest | Not used in this project |
 | Playwright | Not implemented yet |
@@ -2726,6 +2727,105 @@ Axios's generic “Request failed” message does not explain a business conflic
 
 **Q8. What is the role difference between Axios and TanStack Query?**  
 Axios performs the network request. TanStack Query manages server-state caching, loading/error state, retries and invalidation.
+
+---
+
+## Skill 45 — Reporting aggregates, invoice filters and Chart.js
+
+### Define
+
+A reporting endpoint uses database aggregates such as `COUNT` and `SUM` to return a dashboard-ready summary instead of raw rows. Server-side filters reduce the result set in the database according to query parameters. Chart.js renders structured counts as a responsive visual chart.
+
+### Problem
+
+The dashboard only showed totals from the first customer page. Calculating invoice totals in the frontend would require downloading every paginated invoice, which would be slow and incomplete. Adding different currencies together would be an accounting error. The invoice register also lacked status and customer filters.
+
+### LedgerLite solution
+
+`GET /reports/summary` aggregates customers and invoices for the authenticated organization. Every query is scoped by `organization_id`. Invoice status counts are global for that tenant, while financial totals are grouped by currency. Void invoices are excluded from the invoiced money total. `GET /invoices` applies optional `status` and `customer_id` filters to both the count and row queries. The Next.js BFF forwards the token from the cookie, TanStack Query caches the summary, and Chart.js renders the status doughnut.
+
+### Code
+
+```python
+filters = [Invoice.organization_id == current_user.organization_id]
+if invoice_status is not None:
+    filters.append(Invoice.status == invoice_status)
+if customer_id is not None:
+    filters.append(Invoice.customer_id == customer_id)
+
+select(Invoice).where(*filters).offset(pagination.offset).limit(pagination.size)
+```
+
+```python
+select(
+    Invoice.currency,
+    func.sum(
+        case(
+            (Invoice.status != "void", Invoice.total),
+            else_=Decimal("0.00"),
+        )
+    ),
+    func.sum(Invoice.amount_paid),
+    func.sum(Invoice.balance_due),
+).where(
+    Invoice.organization_id == organization_id
+).group_by(Invoice.currency)
+```
+
+```ts
+const response = await httpClient.get<DashboardSummary>("/reports/summary");
+
+useQuery({
+  queryKey: ["dashboard-summary"],
+  queryFn: () => withMinDuration(getDashboardSummary()),
+});
+```
+
+### Benefits
+
+- The frontend receives one predictable dashboard contract.
+- Totals remain complete despite pagination.
+- Tenant A's data cannot enter Tenant B's aggregates.
+- PKR and USD are not added together incorrectly.
+- Filters run in the database, not against an incomplete browser page.
+- Chart.js provides a responsive status distribution.
+- Customer, invoice and payment mutations invalidate the summary cache.
+
+### Note
+
+The endpoint internally executes multiple focused aggregate queries; “one request” does not necessarily mean “one SQL query.” The current report contains lifetime totals. Date ranges and a monthly revenue series are future enhancements. The chart is paired with labels for accessibility and is not the only source of information.
+
+### Interview questions
+
+**Q1. Why not calculate dashboard totals with frontend `reduce()`?**
+The invoice list is paginated, so the frontend only has the current page. A backend aggregate calculates the complete tenant dataset accurately.
+
+**Q2. Why does every report query contain `organization_id`?**
+Authentication identifies the user; the tenant filter determines which company's data that user may access. Without it, cross-company data could leak.
+
+**Q3. Why group by currency?**
+Adding PKR 100 and USD 100 into 200 is meaningless. Invoiced, paid and outstanding totals must remain separate per currency.
+
+**Q4. Why exclude void invoices from invoiced revenue?**
+A void invoice remains as historical evidence but is no longer an active financial claim. It may appear in status counts but not in the invoiced money total.
+
+**Q5. What happens for an invalid status filter?**
+FastAPI `Literal` validation rejects an unsupported value with `422` before a database query runs.
+
+**Q6. Why must the count and list queries use the same filters?**
+Pagination metadata and visible rows must stay consistent. An unfiltered count would produce incorrect totals and page counts.
+
+**Q7. Why are filters included in the TanStack query key?**
+Paid, issued and customer-specific results are different server states. Omitting the filters could display the wrong cached list.
+
+**Q8. When is the dashboard cache refreshed?**
+Customer create/delete, invoice create/update/void and payment create/reverse invalidate `dashboard-summary`, then authoritative totals are refetched.
+
+**Q9. What is the actual Chart.js use in the project?**
+The dashboard doughnut chart displays issued, partially paid, paid and void invoice counts as a responsive visual.
+
+**Q10. Are one request and one SQL query the same?**
+No. The browser calls one summary endpoint; the backend may execute multiple efficient aggregates for clarity and currency correctness.
 
 ---
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { BffTrace } from "@/lib/bff-trace";
+import { backendJson, BffTrace } from "@/lib/bff-trace";
 
 type TokenResponse = {
   access_token: string;
@@ -13,32 +13,54 @@ const apiUrl = process.env.API_URL ?? "http://127.0.0.1:8000";
 
 export async function POST(request: NextRequest) {
   const trace = new BffTrace();
-  const credentials = await request.json();
+  const contentType = request.headers.get("content-type") ?? "";
+  const nativeForm =
+    contentType.includes("application/x-www-form-urlencoded") ||
+    contentType.includes("multipart/form-data");
+  const credentials = nativeForm
+    ? JSON.stringify(Object.fromEntries(await request.formData()))
+    : await request.text();
 
   const backendResponse = await trace.callApi(`${apiUrl}/auth/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(credentials),
+    body: credentials,
     cache: "no-store",
   });
 
-  const data = await backendResponse.json();
+  const data = await backendJson(backendResponse);
 
   if (!backendResponse.ok) {
+    if (nativeForm) {
+      const response = NextResponse.redirect(
+        new URL("/login?reason=invalid-credentials", request.url),
+        303,
+      );
+      response.headers.set("Cache-Control", "no-store");
+      return trace.attach(response);
+    }
+
+    const response = NextResponse.json(data, {
+      status: backendResponse.status,
+    });
+    response.headers.set("Cache-Control", "no-store");
+    // Rate-limited (429): tell the browser how long to wait.
+    const retryAfter = backendResponse.headers.get("retry-after");
+    if (retryAfter) response.headers.set("Retry-After", retryAfter);
     return trace.attach(
-      NextResponse.json(data, {
-        status: backendResponse.status,
-      }),
+      response,
     );
   }
 
   const tokens = data as TokenResponse;
 
-  const response = NextResponse.json({
-    message: "Login successful.",
-  });
+  const response = nativeForm
+    ? NextResponse.redirect(new URL("/dashboard", request.url), 303)
+    : NextResponse.json({ message: "Login successful." });
+
+  response.headers.set("Cache-Control", "no-store");
 
   response.cookies.set("access_token", tokens.access_token, {
     httpOnly: true,

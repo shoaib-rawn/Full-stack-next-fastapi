@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from decimal import Decimal, ROUND_HALF_UP
 
+from app.core.limits import MONEY_MAX
 from app.models.invoice import Invoice
 from app.schemas.invoice import InvoiceLineItemCreate
 
@@ -62,6 +63,14 @@ def calculate_invoice(
         subtotal * tax_rate / HUNDRED
     )
     total = money(subtotal + tax_amount)
+
+    # Each input fits its column, but products and sums can still exceed
+    # Numeric(14, 2); reject before the database overflows.
+    amounts = [item.line_total for item in calculated_items]
+    if any(amount > MONEY_MAX for amount in [*amounts, subtotal, total]):
+        raise AccountingError(
+            f"Invoice amount is too large. The maximum is {MONEY_MAX}."
+        )
 
     return InvoiceCalculation(
         line_items=calculated_items,

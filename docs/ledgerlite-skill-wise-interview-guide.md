@@ -65,6 +65,7 @@ Code ratta nahi karna. Har snippet ki request journey aur decision samajhna hai.
 | 42 | React 19, JSX, components, props, state and hooks | Implemented |
 | 43 | Installed vs actually implemented skills | Honest boundary documented |
 | 44 | Axios typed client, interceptors and refresh retry | Implemented |
+| 45 | Reporting aggregates, invoice filters and Chart.js | Implemented end-to-end |
 
 ---
 
@@ -2609,7 +2610,7 @@ rg -n 'websocket|socket.io' backend/app frontend/src
 | Pino | Not used; Python structured logging used |
 | Stripe webhooks | Not implemented |
 | QuickBooks OAuth2 | Not implemented in LedgerLite |
-| Chart.js | Not implemented yet |
+| Chart.js | Implemented on the reports dashboard |
 | HTML Canvas | Not used |
 | Vitest/Jest/Supertest | Not used in this project |
 | Playwright | Not implemented yet |
@@ -2726,6 +2727,105 @@ Axios ka generic “Request failed” message business conflict explain nahi kar
 
 **Q8. Axios aur TanStack Query ka role difference?**  
 Axios network request karta hai. TanStack Query server-state caching, loading/error state, retries aur invalidation manage karti hai.
+
+---
+
+## Skill 45 — Reporting aggregates, invoice filters and Chart.js
+
+### Define
+
+Reporting endpoint raw rows ke bajaye database aggregates, jaise `COUNT` aur `SUM`, se dashboard-ready summary banata hai. Server-side filters query parameters ke mutabiq database mein hi result set chhota karte hain. Chart.js structured counts ko responsive visual chart mein render karta hai.
+
+### Problem
+
+Dashboard sirf first customer page se total dikha raha tha. Invoice totals nikalne ke liye frontend ko saari paginated invoices mangwana parta, jo slow aur incomplete hota. Different currencies ko add karna accounting mistake hoti. Invoice register mein status/customer filtering bhi nahi thi.
+
+### LedgerLite solution
+
+`GET /reports/summary` authenticated organization ke customers aur invoices aggregate karta hai. Har query `organization_id` se scoped hai. Invoice status counts overall aate hain, jabke financial totals currency ke mutabiq group hote hain. Void invoices invoiced total se exclude hote hain. `GET /invoices` optional `status` aur `customer_id` filters ko count aur rows dono par apply karta hai. Next.js BFF cookie se token forward karta hai; TanStack Query summary cache karti hai; Chart.js status doughnut render karta hai.
+
+### Code
+
+```python
+filters = [Invoice.organization_id == current_user.organization_id]
+if invoice_status is not None:
+    filters.append(Invoice.status == invoice_status)
+if customer_id is not None:
+    filters.append(Invoice.customer_id == customer_id)
+
+select(Invoice).where(*filters).offset(pagination.offset).limit(pagination.size)
+```
+
+```python
+select(
+    Invoice.currency,
+    func.sum(
+        case(
+            (Invoice.status != "void", Invoice.total),
+            else_=Decimal("0.00"),
+        )
+    ),
+    func.sum(Invoice.amount_paid),
+    func.sum(Invoice.balance_due),
+).where(
+    Invoice.organization_id == organization_id
+).group_by(Invoice.currency)
+```
+
+```ts
+const response = await httpClient.get<DashboardSummary>("/reports/summary");
+
+useQuery({
+  queryKey: ["dashboard-summary"],
+  queryFn: () => withMinDuration(getDashboardSummary()),
+});
+```
+
+### Benefits
+
+- Frontend ko ek predictable dashboard contract milta hai.
+- Pagination ke bawajood totals complete rehte hain.
+- Tenant A ka data Tenant B ke aggregates mein nahi aata.
+- PKR aur USD ko ghalat tarah add nahi kiya jata.
+- Filters database mein apply hote hain, browser mein incomplete page par nahi.
+- Chart.js responsive status distribution deta hai.
+- Customer, invoice aur payment mutations summary cache invalidate karti hain.
+
+### Note
+
+Endpoint internally multiple focused aggregate queries chalata hai; “one request” ka matlab lazmi “one SQL query” nahi. Current report lifetime totals deta hai. Date-range aur monthly revenue series future enhancement hain. Chart visualization accessibility ke liye labels ke saath use hoti hai; chart akela information source nahi.
+
+### Interview questions
+
+**Q1. Dashboard totals frontend par `reduce()` se kyun nahi nikale?**
+Invoice list paginated hai, is liye frontend ke paas sirf current page hota. Backend aggregate poore tenant dataset par accurate result deta hai.
+
+**Q2. Har report query mein `organization_id` kyun?**
+Authentication user batati hai; tenant filter decide karta hai ke us user ko kis company ka data mil sakta hai. Filter ke baghair cross-company data leak ho sakta hai.
+
+**Q3. Currency-wise grouping kyun ki?**
+PKR 100 aur USD 100 ko 200 kehna meaningless hai. Har currency ke invoiced, paid aur outstanding totals separate rakhne chahiye.
+
+**Q4. Void invoice total revenue mein kyun nahi?**
+Void invoice historical record rehti hai magar active financial claim nahi. Is liye count mein void status dikh sakta hai, lekin invoiced money total se exclude hota hai.
+
+**Q5. Status filter ka invalid value kya karta hai?**
+FastAPI `Literal` validation unsupported status ko query chalne se pehle `422` response se reject karti hai.
+
+**Q6. Count query aur list query ko same filters kyun chahiye?**
+Pagination metadata aur visible rows consistent rehne chahiye. Agar count unfiltered ho to pages aur total ghalat honge.
+
+**Q7. TanStack query key mein filters kyun hain?**
+`paid`, `issued` aur customer-specific results different server states hain. Filter key mein na ho to wrong cached list show ho sakti hai.
+
+**Q8. Dashboard cache kab refresh hoti hai?**
+Customer create/delete, invoice create/update/void aur payment create/reverse ke baad `dashboard-summary` invalidate hoti hai, phir authoritative backend totals refetch hote hain.
+
+**Q9. Chart.js ka project mein actual use kya hai?**
+Dashboard ka doughnut chart issued, partially paid, paid aur void invoice counts ko responsive visual mein show karta hai.
+
+**Q10. One request aur one SQL query same hain?**
+Nahi. Browser ek summary endpoint call karta hai; backend clarity aur currency correctness ke liye multiple efficient aggregate queries chala sakta hai.
 
 ---
 

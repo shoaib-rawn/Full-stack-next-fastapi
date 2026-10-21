@@ -152,6 +152,40 @@ async def test_invoice_number_search_payment_and_reversal_flow() -> None:
             assert second.json()["invoice_number"].endswith("-0002")
             assert first.json()["total"] == "110.00"
 
+            summary_a = await client.get("/reports/summary", headers=headers_a)
+            assert summary_a.status_code == 200
+            assert summary_a.json()["total_customers"] == 2
+            assert summary_a.json()["total_invoices"] == 2
+            assert summary_a.json()["issued_invoices"] == 2
+            assert summary_a.json()["currency_totals"] == [
+                {
+                    "currency": "PKR",
+                    "total_invoiced": "220.00",
+                    "total_paid": "0.00",
+                    "total_outstanding": "220.00",
+                }
+            ]
+
+            summary_b = await client.get("/reports/summary", headers=headers_b)
+            assert summary_b.status_code == 200
+            assert summary_b.json()["total_customers"] == 0
+            assert summary_b.json()["total_invoices"] == 0
+            assert summary_b.json()["currency_totals"] == []
+
+            customer_filter = await client.get(
+                f"/invoices?customer_id={alpha.json()['id']}&page=1&size=10",
+                headers=headers_a,
+            )
+            assert customer_filter.status_code == 200
+            assert customer_filter.json()["total"] == 2
+
+            empty_status_filter = await client.get(
+                "/invoices?status=paid&page=1&size=10",
+                headers=headers_a,
+            )
+            assert empty_status_filter.status_code == 200
+            assert empty_status_filter.json()["total"] == 0
+
             invoice_id = first.json()["id"]
             hidden_from_tenant_b = await client.get(
                 f"/invoices/{invoice_id}", headers=headers_b

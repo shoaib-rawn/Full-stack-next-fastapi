@@ -4,6 +4,7 @@ import type { InvoiceFormValues } from "./schemas";
 import type {
   CreateInvoiceInput,
   Invoice,
+  InvoiceFilters,
   InvoicePage,
   UpdateInvoiceInput,
 } from "./types";
@@ -25,9 +26,18 @@ export function toInvoicePayload(values: InvoiceFormValues): CreateInvoiceInput 
   };
 }
 
-export async function getInvoices(page: number, size: number): Promise<InvoicePage> {
+export async function getInvoices(
+  page: number,
+  size: number,
+  filters: InvoiceFilters = {},
+): Promise<InvoicePage> {
   const response = await httpClient.get<InvoicePage>("/invoices", {
-    params: { page, size },
+    params: {
+      page,
+      size,
+      status: filters.status,
+      customer_id: filters.customerId,
+    },
   });
 
   return response.data;

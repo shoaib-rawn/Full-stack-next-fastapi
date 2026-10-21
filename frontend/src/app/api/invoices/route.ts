@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-import { BffTrace } from "@/lib/bff-trace";
+import { backendJson, BffTrace } from "@/lib/bff-trace";
 
 const apiUrl = process.env.API_URL ?? "http://127.0.0.1:8000";
 
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     cache: "no-store",
   });
 
-  const data = await backendResponse.json();
+  const data = await backendJson(backendResponse);
 
   return trace.attach(
     NextResponse.json(data, {
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     return trace.stop({ detail: "Authentication required." }, 401);
   }
 
-  const payload = await request.json();
+  const payload = await request.text();
 
   const backendResponse = await trace.callApi(`${apiUrl}/invoices`, {
     method: "POST",
@@ -53,11 +53,11 @@ export async function POST(request: NextRequest) {
       "Content-Type": "application/json",
       Authorization: `Bearer ${accessToken}`,
     },
-    body: JSON.stringify(payload),
+    body: payload,
     cache: "no-store",
   });
 
-  const data = await backendResponse.json();
+  const data = await backendJson(backendResponse);
 
   return trace.attach(
     NextResponse.json(data, {

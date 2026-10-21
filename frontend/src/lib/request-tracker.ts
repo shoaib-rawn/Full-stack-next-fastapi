@@ -21,6 +21,7 @@ export type TrackedFlow =
   | "invoice-create"
   | "invoice-update"
   | "invoice-void"
+  | "reports"
   | "organization"
   | "organization-update"
   | "members"
@@ -102,6 +103,8 @@ export function flowForRequest(
   }
 
   if (/^\/invoices\/\d+\/void$/.test(url)) return "invoice-void";
+
+  if (url === "/reports/summary") return "reports";
 
   if (url === "/organizations/current") {
     return verb === "PATCH" ? "organization-update" : "organization";

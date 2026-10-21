@@ -14,6 +14,7 @@ from app.api.routes.payments import (
 )
 from app.api.routes.auth import router as auth_router
 from app.api.routes.organizations import router as organizations_router
+from app.api.routes.reports import router as reports_router
 from app.core.config import settings
 from app.core.logging import configure_logging
 from app.db.redis import redis_client
@@ -64,6 +65,10 @@ openapi_tags = [
             "Record, view and reverse tenant-scoped invoice payments."
         ),
     },
+    {
+        "name": "Reports",
+        "description": "Tenant-scoped dashboard counts and currency-safe totals.",
+    },
 ]
 
 
@@ -104,3 +109,4 @@ app.include_router(members_router)
 app.include_router(invoices_router)
 app.include_router(payments_router)
 app.include_router(payment_reversal_router)
+app.include_router(reports_router)

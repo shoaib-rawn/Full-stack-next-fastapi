@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { withMinDuration } from "@/lib/demo-delay";
+import { dashboardKeys } from "@/features/dashboard/hooks";
 
 import {
   createCustomer,
@@ -45,6 +46,7 @@ export function useCreateCustomer() {
       void queryClient.invalidateQueries({
         queryKey: customerKeys.all,
       });
+      void queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
     },
   });
 }
@@ -73,6 +75,7 @@ export function useUpdateCustomer() {
       void queryClient.invalidateQueries({
         queryKey: customerKeys.all,
       });
+      void queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
     },
   });
 }
@@ -91,6 +94,7 @@ export function useDeleteCustomer() {
       void queryClient.invalidateQueries({
         queryKey: customerKeys.all,
       });
+      void queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
     },
   });
 }

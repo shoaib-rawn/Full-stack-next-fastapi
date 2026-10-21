@@ -152,6 +152,12 @@ const categoryStyles: Record<
     border: "#e4b58e",
     icon: "✅",
   },
+  "Reporting & analytics": {
+    solid: "#6d3fc4",
+    soft: "#efe8ff",
+    border: "#c7b0ef",
+    icon: "📊",
+  },
   "Additional skills": {
     solid: "#44546a",
     soft: "#edf2f7",

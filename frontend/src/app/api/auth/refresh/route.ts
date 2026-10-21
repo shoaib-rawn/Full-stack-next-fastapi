@@ -1,6 +1,8 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
+import { backendJson, BffTrace } from "@/lib/bff-trace";
+
 type TokenResponse = {
   access_token: string;
   refresh_token: string;
@@ -11,18 +13,16 @@ type TokenResponse = {
 const apiUrl = process.env.API_URL ?? "http://127.0.0.1:8000";
 
 export async function POST() {
+  const trace = new BffTrace();
   const cookieStore = await cookies();
 
   const refreshToken = cookieStore.get("refresh_token")?.value;
 
   if (!refreshToken) {
-    return NextResponse.json(
-      { detail: "Refresh token is missing." },
-      { status: 401 },
-    );
+    return trace.stop({ detail: "Refresh token is missing." }, 401);
   }
 
-  const backendResponse = await fetch(`${apiUrl}/auth/refresh`, {
+  const backendResponse = await trace.callApi(`${apiUrl}/auth/refresh`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -33,7 +33,7 @@ export async function POST() {
     cache: "no-store",
   });
 
-  const data = await backendResponse.json();
+  const data = await backendJson(backendResponse);
 
   if (!backendResponse.ok) {
     const response = NextResponse.json(data, {
@@ -42,8 +42,9 @@ export async function POST() {
 
     response.cookies.delete("access_token");
     response.cookies.delete("refresh_token");
+    trace.cookies("cleared");
 
-    return response;
+    return trace.attach(response);
   }
 
   const tokens = data as TokenResponse;
@@ -68,5 +69,7 @@ export async function POST() {
     path: "/",
   });
 
-  return response;
+  trace.cookies("set");
+
+  return trace.attach(response);
 }

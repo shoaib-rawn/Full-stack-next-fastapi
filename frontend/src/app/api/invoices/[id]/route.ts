@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-import { BffTrace } from "@/lib/bff-trace";
+import { backendJson, BffTrace } from "@/lib/bff-trace";
 
 const apiUrl = process.env.API_URL ?? "http://127.0.0.1:8000";
 
@@ -34,7 +34,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
     cache: "no-store",
   });
 
-  const data = await response.json();
+  const data = await backendJson(response);
 
   return trace.attach(
     NextResponse.json(data, {
@@ -50,7 +50,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   if (!token) return unauthorized(trace);
 
   const { id } = await context.params;
-  const payload = await request.json();
+  const payload = await request.text();
 
   const response = await trace.callApi(`${apiUrl}/invoices/${id}`, {
     method: "PATCH",
@@ -58,11 +58,11 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify(payload),
+    body: payload,
     cache: "no-store",
   });
 
-  const data = await response.json();
+  const data = await backendJson(response);
 
   return trace.attach(
     NextResponse.json(data, {

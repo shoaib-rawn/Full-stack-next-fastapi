@@ -1,14 +1,17 @@
 from datetime import datetime, timezone
-from typing import Annotated
+from decimal import Decimal
+from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api.dependencies.auth import get_current_owner, get_current_user
+from app.api.dependencies.ids import DbId
 from app.api.dependencies.pagination import PaginationParams
+from app.core.limits import DB_ID_MAX
 from app.db.session import get_db_session
 from app.models.customer import Customer
 from app.models.invoice import Invoice
@@ -22,7 +25,7 @@ from app.schemas.invoice import (
     InvoiceUpdate,
 )
 from app.schemas.pagination import Page
-from app.services.accounting import calculate_invoice
+from app.services.accounting import AccountingError, calculate_invoice
 
 
 router = APIRouter(
@@ -54,6 +57,19 @@ async def get_invoice_or_404(
 
     return invoice
 
+
+
+def calculate_or_422(
+    line_items: list[InvoiceLineItemCreate],
+    tax_rate: Decimal,
+):
+    try:
+        return calculate_invoice(line_items=line_items, tax_rate=tax_rate)
+    except AccountingError as error:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=str(error),
+        ) from None
 
 @router.post(
     "",
@@ -116,7 +132,7 @@ async def create_invoice(
 
     organization.next_invoice_sequence = sequence + 1
 
-    calculation = calculate_invoice(
+    calculation = calculate_or_422(
         line_items=payload.line_items,
         tax_rate=payload.tax_rate,
     )
@@ -185,19 +201,28 @@ async def list_invoices(
         AsyncSession,
         Depends(get_db_session),
     ],
+    invoice_status: Annotated[
+        Literal["issued", "partially_paid", "paid", "void"] | None,
+        Query(alias="status"),
+    ] = None,
+    customer_id: Annotated[int | None, Query(gt=0, le=DB_ID_MAX)] = None,
 ) -> Page[InvoiceResponse]:
-    tenant_filter = (
-        Invoice.organization_id
-        == current_user.organization_id
-    )
+    filters = [
+        Invoice.organization_id == current_user.organization_id,
+    ]
+    if invoice_status is not None:
+        filters.append(Invoice.status == invoice_status)
+    if customer_id is not None:
+        filters.append(Invoice.customer_id == customer_id)
+
     total = await session.scalar(
         select(func.count())
         .select_from(Invoice)
-        .where(tenant_filter)
+        .where(*filters)
     )
     result = await session.execute(
         select(Invoice)
-        .where(tenant_filter)
+        .where(*filters)
         .options(selectinload(Invoice.line_items))
         .order_by(Invoice.id.desc())
         .offset(pagination.offset)
@@ -218,7 +243,7 @@ async def list_invoices(
     summary="Get one invoice",
 )
 async def get_invoice(
-    invoice_id: int,
+    invoice_id: DbId,
     current_user: Annotated[
         User,
         Depends(get_current_user),
@@ -245,7 +270,7 @@ async def get_invoice(
     ),
 )
 async def update_invoice(
-    invoice_id: int,
+    invoice_id: DbId,
     payload: InvoiceUpdate,
     current_user: Annotated[
         User,
@@ -298,7 +323,7 @@ async def update_invoice(
             for item in invoice.line_items
         ]
     )
-    calculation = calculate_invoice(
+    calculation = calculate_or_422(
         line_items=line_items,
         tax_rate=tax_rate,
     )
@@ -354,7 +379,7 @@ async def update_invoice(
     ),
 )
 async def void_invoice(
-    invoice_id: int,
+    invoice_id: DbId,
     current_user: Annotated[
         User,
         Depends(get_current_owner),

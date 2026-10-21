@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-import { BffTrace } from "@/lib/bff-trace";
+import { backendJson, BffTrace } from "@/lib/bff-trace";
 
 const apiUrl = process.env.API_URL ?? "http://127.0.0.1:8000";
 
@@ -18,12 +18,12 @@ async function forward(request: NextRequest, method: "GET" | "POST") {
       Authorization: `Bearer ${token}`,
       ...(method === "POST" ? { "Content-Type": "application/json" } : {}),
     },
-    body: method === "POST" ? JSON.stringify(await request.json()) : undefined,
+    body: method === "POST" ? await request.text() : undefined,
     cache: "no-store",
   });
 
   return trace.attach(
-    NextResponse.json(await response.json(), { status: response.status }),
+    NextResponse.json(await backendJson(response), { status: response.status }),
   );
 }
 

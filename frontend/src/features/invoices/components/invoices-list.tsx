@@ -8,9 +8,16 @@ import { RequestAnimation } from "@/components/request-animation";
 import { formatMoney } from "@/lib/money";
 
 import { useCustomerOptions, useInvoices } from "../hooks";
+import type { InvoiceStatus } from "../types";
 import { InvoiceStatusBadge } from "./status-badge";
 
 const PAGE_SIZE = 10;
+const invoiceStatuses: InvoiceStatus[] = [
+  "issued",
+  "partially_paid",
+  "paid",
+  "void",
+];
 
 export function InvoicesList() {
   const router = useRouter();
@@ -23,9 +30,19 @@ export function InvoicesList() {
     Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
 
   const created = searchParams.get("created");
+  const requestedStatus = searchParams.get("status");
+  const status = invoiceStatuses.includes(requestedStatus as InvoiceStatus)
+    ? (requestedStatus as InvoiceStatus)
+    : undefined;
+  const requestedCustomerId = Number(searchParams.get("customer"));
+  const customerId =
+    Number.isInteger(requestedCustomerId) && requestedCustomerId > 0
+      ? requestedCustomerId
+      : undefined;
   const { data, isPending, isError, error, isFetching, refetch } = useInvoices(
     page,
     PAGE_SIZE,
+    { status, customerId },
   );
   const customers = useCustomerOptions();
 
@@ -39,6 +56,19 @@ export function InvoicesList() {
     params.set("page", nextPage.toString());
     params.delete("created");
     router.push(`${pathname}?${params.toString()}`);
+  }
+
+  function changeFilter(name: "status" | "customer", value: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value) params.set(name, value);
+    else params.delete(name);
+    params.set("page", "1");
+    params.delete("created");
+    router.push(`${pathname}?${params.toString()}`);
+  }
+
+  function clearFilters() {
+    router.push(pathname);
   }
 
   const banner =
@@ -55,12 +85,57 @@ export function InvoicesList() {
       </div>
     ) : null;
 
+  const filters = (
+    <section className="mt-6 grid gap-4 rounded-3xl border-2 border-[#f1c75b] bg-[#fff8dc] p-4 shadow-[0_6px_0_rgba(8,45,99,0.06)] sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+      <label className="grid gap-2 text-sm font-black text-[#082d63]">
+        Invoice status
+        <select
+          value={status ?? ""}
+          onChange={(event) => changeFilter("status", event.target.value)}
+          className="rounded-xl border-2 border-[#d7ad3c] bg-white px-3 py-3 font-bold outline-none focus:border-[#1267c9]"
+        >
+          <option value="">All statuses</option>
+          <option value="issued">Issued</option>
+          <option value="partially_paid">Partially paid</option>
+          <option value="paid">Paid</option>
+          <option value="void">Void</option>
+        </select>
+      </label>
+
+      <label className="grid gap-2 text-sm font-black text-[#082d63]">
+        Customer
+        <select
+          value={customerId?.toString() ?? ""}
+          onChange={(event) => changeFilter("customer", event.target.value)}
+          className="rounded-xl border-2 border-[#d7ad3c] bg-white px-3 py-3 font-bold outline-none focus:border-[#1267c9]"
+        >
+          <option value="">All customers</option>
+          {customers.data?.items.map((customer) => (
+            <option key={customer.id} value={customer.id}>
+              {customer.display_name}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <button
+        type="button"
+        onClick={clearFilters}
+        disabled={!status && !customerId}
+        className="rounded-xl border-2 border-[#082d63] px-4 py-3 text-sm font-black text-[#082d63] disabled:cursor-not-allowed disabled:opacity-35"
+      >
+        Clear filters
+      </button>
+    </section>
+  );
+
   // Every fetch (first load, revisit, refetch after a change) shows the
   // request animation for the same demo duration, like customers.
   if (isPending || isFetching) {
     return (
       <>
         {banner}
+        {filters}
         <div className="mt-8">
           <RequestAnimation flow="invoices" />
         </div>
@@ -72,6 +147,7 @@ export function InvoicesList() {
     return (
       <>
         {banner}
+        {filters}
         <div className="mt-8">
           <RequestAnimation
             flow="invoices"
@@ -95,16 +171,25 @@ export function InvoicesList() {
     return (
       <>
         {banner}
+        {filters}
         <div className="mt-8 rounded-3xl border-2 border-dashed border-[#83cff4] bg-white p-10 text-center">
           <span className="mx-auto grid size-14 place-items-center rounded-full bg-[#e5f6ff] text-2xl">🧾</span>
-          <h2 className="mt-4 text-xl font-black text-[#082d63]">No invoices yet</h2>
-          <p className="mt-2 text-[#58718c]">Create your first invoice to start billing a customer.</p>
-          <Link
-            href="/invoices/new"
-            className="mt-5 inline-flex rounded-xl bg-[#159447] px-5 py-3 font-black text-white shadow-[0_4px_0_#17652f]"
-          >
-            + Create your first invoice
-          </Link>
+          <h2 className="mt-4 text-xl font-black text-[#082d63]">
+            {status || customerId ? "No invoices match these filters" : "No invoices yet"}
+          </h2>
+          <p className="mt-2 text-[#58718c]">
+            {status || customerId
+              ? "Change or clear the filters to see other invoices."
+              : "Create your first invoice to start billing a customer."}
+          </p>
+          {!status && !customerId && (
+            <Link
+              href="/invoices/new"
+              className="mt-5 inline-flex rounded-xl bg-[#159447] px-5 py-3 font-black text-white shadow-[0_4px_0_#17652f]"
+            >
+              + Create your first invoice
+            </Link>
+          )}
         </div>
       </>
     );
@@ -113,6 +198,7 @@ export function InvoicesList() {
   return (
     <>
       {banner}
+      {filters}
       <section className="mt-6 overflow-hidden rounded-3xl border-2 border-[#72c8f1] bg-white shadow-[0_8px_0_rgba(8,45,99,0.07)]">
         <div className="flex items-center justify-between gap-4 bg-[#e5f6ff] px-5 py-4">
           <div>

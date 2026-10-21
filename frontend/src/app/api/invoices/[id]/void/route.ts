@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-import { BffTrace } from "@/lib/bff-trace";
+import { backendJson, BffTrace } from "@/lib/bff-trace";
 
 const apiUrl = process.env.API_URL ?? "http://127.0.0.1:8000";
 
@@ -28,7 +28,7 @@ export async function POST(_request: NextRequest, context: RouteContext) {
     cache: "no-store",
   });
 
-  const data = await response.json();
+  const data = await backendJson(response);
 
   return trace.attach(
     NextResponse.json(data, {

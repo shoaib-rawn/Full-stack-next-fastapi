@@ -2,14 +2,13 @@
 
 import Link from "next/link";
 
-import {
-  ConceptStep,
-  MiniFetch,
-  MiniOneQuery,
-  MiniSession,
-} from "@/components/concept-visuals";
+import { ConceptStep, MiniFetch, MiniOneQuery, MiniSession } from "@/components/concept-visuals";
 import { RequestAnimation } from "@/components/request-animation";
 import { useCustomers } from "@/features/customers/hooks";
+import { formatMoney } from "@/lib/money";
+
+import { useDashboardSummary } from "../hooks";
+import { InvoiceStatusChart } from "./invoice-status-chart";
 
 type DashboardOverviewProps = {
   fullName: string;
@@ -17,53 +16,87 @@ type DashboardOverviewProps = {
   role: string;
 };
 
-export function DashboardOverview({
-  fullName,
-  email,
-  role,
-}: DashboardOverviewProps) {
+export function DashboardOverview({ fullName, email, role }: DashboardOverviewProps) {
+  const summary = useDashboardSummary();
   const customers = useCustomers(1, 5);
+  const outstandingCount = summary.data
+    ? summary.data.issued_invoices + summary.data.partially_paid_invoices
+    : 0;
 
   return (
     <div className="mx-auto max-w-7xl">
       <section className="grid overflow-hidden rounded-[1.75rem] border-2 border-[#72c8f1] bg-white shadow-[0_8px_0_rgba(8,45,99,0.08)] lg:grid-cols-[1.15fr_0.85fr]">
         <div className="bg-linear-to-br from-[#e5f6ff] via-white to-[#f4fbff] p-6 sm:p-8">
-          <span className="inline-flex rounded-md bg-[#1267c9] px-3 py-1 text-xs font-black uppercase tracking-wider text-white">
-            Live workspace
-          </span>
-          <h1 className="mt-4 text-3xl font-black tracking-tight text-[#082d63] md:text-5xl">
-            Welcome back, {fullName}
-          </h1>
+          <span className="inline-flex rounded-md bg-[#1267c9] px-3 py-1 text-xs font-black uppercase tracking-wider text-white">Live workspace</span>
+          <h1 className="mt-4 text-3xl font-black tracking-tight text-[#082d63] md:text-5xl">Welcome back, {fullName}</h1>
           <p className="mt-3 font-medium text-[#58718c]">
-            {email} <span className="px-2 text-[#1267c9]">•</span> {role}
+            {email} <span className="px-2 text-[#1267c9]">•</span>
+            <span className="capitalize">{role}</span>
           </p>
         </div>
 
         <div className="bg-[#073979] p-6 text-white sm:p-8">
-          <p className="text-xs font-black uppercase tracking-widest text-[#ffd65a]">
-            What this page proves
-          </p>
+          <p className="text-xs font-black uppercase tracking-widest text-[#ffd65a]">What this page proves</p>
           <div className="mt-5 grid gap-3">
-            <ConceptStep number="1" title="Verify user" caption="Server side">
-              <MiniSession />
-            </ConceptStep>
-            <ConceptStep number="2" title="Real data" caption="TanStack Query">
-              <MiniFetch />
-            </ConceptStep>
-            <ConceptStep number="3" title="One query" caption="Totals + recent">
-              <MiniOneQuery />
-            </ConceptStep>
+            <ConceptStep number="1" title="Verify user" caption="Server side"><MiniSession /></ConceptStep>
+            <ConceptStep number="2" title="Real data" caption="TanStack Query"><MiniFetch /></ConceptStep>
+            <ConceptStep number="3" title="One request" caption="Counts + totals"><MiniOneQuery /></ConceptStep>
           </div>
         </div>
       </section>
 
       <section className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <MetricCard number="01" label="Total customers" value={customers.isFetching ? "..." : String(customers.data?.total ?? 0)} tone="blue" />
-        <MetricCard number="02" label="Customer pages" value={customers.isFetching ? "..." : String(customers.data?.pages ?? 0)} tone="pink" />
-        <MetricCard number="03" label="Workspace role" value={role} tone="green" />
+        <MetricCard number="01" label="Total customers" value={summary.isFetching ? "..." : String(summary.data?.total_customers ?? 0)} tone="blue" />
+        <MetricCard number="02" label="Total invoices" value={summary.isFetching ? "..." : String(summary.data?.total_invoices ?? 0)} tone="pink" />
+        <MetricCard number="03" label="Invoices outstanding" value={summary.isFetching ? "..." : String(outstandingCount)} tone="green" />
       </section>
 
-      {/* The whole card is one link to the register; rows are not clickable. */}
+      {summary.isFetching && <div className="mt-6"><RequestAnimation flow="reports" /></div>}
+
+      {summary.isError && (
+        <section className="mt-6 rounded-3xl border-2 border-[#f1a8bc] bg-[#ffe3eb] p-6 text-center">
+          <p className="font-black text-[#a3234c]">Could not load the accounting summary.</p>
+          <button type="button" onClick={() => void summary.refetch()} className="mt-4 rounded-xl bg-[#a3234c] px-4 py-2 font-black text-white">Try again</button>
+        </section>
+      )}
+
+      {summary.data && !summary.isFetching && (
+        <section className="mt-6 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
+          <article className="rounded-3xl border-2 border-[#72c8f1] bg-white p-5 shadow-[0_8px_0_rgba(8,45,99,0.07)] sm:p-6">
+            <span className="rounded-md bg-[#ccecff] px-2 py-1 text-xs font-black text-[#0759a8]">INVOICE LIFECYCLE</span>
+            <h2 className="mt-3 text-2xl font-black text-[#082d63]">Status distribution</h2>
+            <p className="mt-1 text-sm text-[#58718c]">Chart.js renders the tenant-scoped invoice counts.</p>
+            <div className="mt-4"><InvoiceStatusChart summary={summary.data} /></div>
+          </article>
+
+          <article className="rounded-3xl border-2 border-[#f1c75b] bg-[#fffdf4] p-5 shadow-[0_8px_0_rgba(8,45,99,0.07)] sm:p-6">
+            <span className="rounded-md bg-[#ffe79c] px-2 py-1 text-xs font-black text-[#765603]">CURRENCY-SAFE TOTALS</span>
+            <h2 className="mt-3 text-2xl font-black text-[#082d63]">Money overview</h2>
+            <p className="mt-1 text-sm text-[#58718c]">Different currencies remain separate to keep totals meaningful.</p>
+
+            {summary.data.currency_totals.length === 0 ? (
+              <div className="mt-5 rounded-2xl border-2 border-dashed border-[#e6c761] p-8 text-center font-bold text-[#765603]">Financial totals will appear after the first invoice.</div>
+            ) : (
+              <div className="mt-5 grid gap-4">
+                {summary.data.currency_totals.map((totals) => (
+                  <div key={totals.currency} className="rounded-2xl border-2 border-[#ead27f] bg-white p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-lg font-black text-[#082d63]">{totals.currency}</p>
+                      <span className="rounded-full bg-[#fff1bc] px-3 py-1 text-xs font-black text-[#765603]">Accounting totals</span>
+                    </div>
+                    <dl className="mt-4 grid gap-3 sm:grid-cols-3">
+                      <MoneyItem label="Invoiced" value={formatMoney(totals.total_invoiced, totals.currency)} />
+                      <MoneyItem label="Paid" value={formatMoney(totals.total_paid, totals.currency)} />
+                      <MoneyItem label="Outstanding" value={formatMoney(totals.total_outstanding, totals.currency)} />
+                    </dl>
+                  </div>
+                ))}
+              </div>
+            )}
+          </article>
+        </section>
+      )}
+
       <Link
         href="/customers"
         aria-label="Recent customers — open customer register"
@@ -71,31 +104,19 @@ export function DashboardOverview({
       >
         <div className="flex flex-wrap items-center justify-between gap-4 bg-[#e8f8dc] px-5 py-4 sm:px-6">
           <div>
-            <span className="rounded-md bg-[#cceeb7] px-2 py-1 text-xs font-black text-[#286e30]">RESULT</span>
-            <h2 className="mt-2 text-2xl font-black text-[#082d63]">Recent customers</h2>
+            <span className="rounded-md bg-[#cceeb7] px-2 py-1 text-xs font-black text-[#286e30]">RECENT</span>
+            <h2 className="mt-2 text-2xl font-black text-[#082d63]">Customers</h2>
           </div>
-          <span className="rounded-xl bg-[#1267c9] px-4 py-2 text-sm font-black text-white shadow-[0_4px_0_#082d63] transition group-hover:bg-[#0759a8]">
-            Open customer register →
-          </span>
+          <span className="rounded-xl bg-[#1267c9] px-4 py-2 text-sm font-black text-white shadow-[0_4px_0_#082d63] transition group-hover:bg-[#0759a8]">Open customer register →</span>
         </div>
 
         <div className="p-5 sm:p-6">
           {customers.isFetching && <RequestAnimation flow="customers" />}
-
-          {customers.isError && (
-            <p className="rounded-xl bg-[#ffe3eb] p-4 font-bold text-[#a3234c]">Could not load customer summary.</p>
-          )}
-
-          {!customers.isFetching && customers.data?.items.length === 0 && (
-            <p className="rounded-xl border-2 border-dashed border-[#b9def0] p-7 text-center text-[#58718c]">No customers yet.</p>
-          )}
-
-          <div className="grid gap-3">
+          {customers.isError && <p className="rounded-xl bg-[#ffe3eb] p-4 font-bold text-[#a3234c]">Could not load recent customers.</p>}
+          {!customers.isFetching && customers.data?.items.length === 0 && <p className="rounded-xl border-2 border-dashed border-[#b9def0] p-7 text-center text-[#58718c]">No customers yet.</p>}
+          <div className="grid gap-3 sm:grid-cols-2">
             {!customers.isFetching && customers.data?.items.map((customer) => (
-              <div
-                key={customer.id}
-                className="rounded-2xl border-2 border-[#c9e6f4] bg-[#f7fcff] p-4"
-              >
+              <div key={customer.id} className="rounded-2xl border-2 border-[#c9e6f4] bg-[#f7fcff] p-4">
                 <p className="font-black text-[#082d63]">{customer.display_name}</p>
                 <p className="mt-1 text-sm text-[#647d96]">{customer.email ?? "No email"}</p>
               </div>
@@ -107,23 +128,12 @@ export function DashboardOverview({
   );
 }
 
-function MetricCard({
-  number,
-  label,
-  value,
-  tone,
-}: {
-  number: string;
-  label: string;
-  value: string;
-  tone: "blue" | "pink" | "green";
-}) {
+function MetricCard({ number, label, value, tone }: { number: string; label: string; value: string; tone: "blue" | "pink" | "green" }) {
   const colors = {
     blue: "border-[#72c8f1] bg-[#e5f6ff]",
     pink: "border-[#f4acc1] bg-[#ffe8ef]",
     green: "border-[#9bd884] bg-[#e8f8dc]",
   };
-
   return (
     <article className={`rounded-2xl border-2 p-5 shadow-[0_6px_0_rgba(8,45,99,0.07)] ${colors[tone]}`}>
       <div className="flex items-center gap-3">
@@ -135,3 +145,11 @@ function MetricCard({
   );
 }
 
+function MoneyItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="text-xs font-black uppercase tracking-wider text-[#6f7f8f]">{label}</dt>
+      <dd className="mt-1 break-words text-lg font-black text-[#082d63]">{value}</dd>
+    </div>
+  );
+}
