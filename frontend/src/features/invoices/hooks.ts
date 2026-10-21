@@ -9,6 +9,7 @@ import {
 
 import { getCustomers } from "@/features/customers/api";
 import { customerKeys } from "@/features/customers/hooks";
+import { dashboardKeys } from "@/features/dashboard/hooks";
 import { withMinDuration } from "@/lib/demo-delay";
 
 import {
@@ -20,10 +21,12 @@ import {
   voidInvoice,
 } from "./api";
 import type { InvoiceFormValues } from "./schemas";
+import type { InvoiceFilters } from "./types";
 
 export const invoiceKeys = {
   all: ["invoices"] as const,
-  list: (page: number, size: number) => ["invoices", "list", page, size] as const,
+  list: (page: number, size: number, filters: InvoiceFilters = {}) =>
+    ["invoices", "list", page, size, filters.status ?? "all", filters.customerId ?? "all"] as const,
   detail: (id: number) => ["invoices", "detail", id] as const,
 };
 
@@ -32,10 +35,14 @@ const CUSTOMER_OPTIONS_SIZE = 100;
 
 // Learning mode, same as customers: every fetch takes the demo duration and
 // opening a page always refetches, so the request animation is visible.
-export function useInvoices(page: number, size: number) {
+export function useInvoices(
+  page: number,
+  size: number,
+  filters: InvoiceFilters = {},
+) {
   return useQuery({
-    queryKey: invoiceKeys.list(page, size),
-    queryFn: () => withMinDuration(getInvoices(page, size)),
+    queryKey: invoiceKeys.list(page, size, filters),
+    queryFn: () => withMinDuration(getInvoices(page, size, filters)),
     refetchOnMount: "always",
   });
 }
@@ -78,6 +85,7 @@ export function useCreateInvoice() {
       withMinDuration(createInvoice(values)),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: invoiceKeys.all });
+      void queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
     },
   });
 }
@@ -91,6 +99,7 @@ export function useUpdateInvoice(id: number) {
     onSuccess: (invoice) => {
       queryClient.setQueryData(invoiceKeys.detail(invoice.id), invoice);
       void queryClient.invalidateQueries({ queryKey: invoiceKeys.all });
+      void queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
     },
   });
 }
@@ -103,6 +112,7 @@ export function useVoidInvoice(id: number) {
     onSuccess: (invoice) => {
       queryClient.setQueryData(invoiceKeys.detail(invoice.id), invoice);
       void queryClient.invalidateQueries({ queryKey: invoiceKeys.all });
+      void queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
     },
   });
 }

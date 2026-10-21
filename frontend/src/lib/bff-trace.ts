@@ -17,6 +17,16 @@ async function errorDetail(response: Response) {
   }
 }
 
+// FastAPI answers JSON except when it crashes (plain-text 500). Never let that
+// turn into an empty BFF 500: always hand the browser a JSON `detail`.
+export async function backendJson(response: Response): Promise<unknown> {
+  try {
+    return await response.json();
+  } catch {
+    return { detail: "The server returned an unexpected response." };
+  }
+}
+
 // Records what a BFF route handler really did, then attaches it to the
 // response so the browser's request animation can show real steps.
 export class BffTrace {

@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-import { BffTrace } from "@/lib/bff-trace";
+import { backendJson, BffTrace } from "@/lib/bff-trace";
 
 const apiUrl = process.env.API_URL ?? "http://127.0.0.1:8000";
 type RouteContext = { params: Promise<{ id: string }> };
@@ -18,8 +18,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(await request.json()),
+    body: await request.text(),
     cache: "no-store",
   });
-  return trace.attach(NextResponse.json(await response.json(), { status: response.status }));
+  return trace.attach(NextResponse.json(await backendJson(response), { status: response.status }));
 }

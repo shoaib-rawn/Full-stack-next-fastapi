@@ -1,23 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { BffTrace } from "@/lib/bff-trace";
+import { backendJson, BffTrace } from "@/lib/bff-trace";
 
 const apiUrl = process.env.API_URL ?? "http://127.0.0.1:8000";
 
 export async function POST(request: NextRequest) {
   const trace = new BffTrace();
-  const signupData = await request.json();
+  const signupData = await request.text();
 
   const backendResponse = await trace.callApi(`${apiUrl}/auth/signup`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(signupData),
+    body: signupData,
     cache: "no-store",
   });
 
-  const data = await backendResponse.json();
+  const data = await backendJson(backendResponse);
 
   return trace.attach(
     NextResponse.json(data, {

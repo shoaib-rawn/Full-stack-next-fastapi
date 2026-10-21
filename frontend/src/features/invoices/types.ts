@@ -43,6 +43,11 @@ export type InvoicePage = {
   pages: number;
 };
 
+export type InvoiceFilters = {
+  status?: InvoiceStatus;
+  customerId?: number;
+};
+
 export type InvoiceLineItemInput = {
   description: string;
   quantity: string;

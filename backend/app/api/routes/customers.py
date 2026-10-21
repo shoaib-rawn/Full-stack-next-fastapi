@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies.auth import get_current_owner, get_current_user
+from app.api.dependencies.ids import DbId
 from app.api.dependencies.pagination import PaginationParams
 from app.db.session import get_db_session
 from app.models.customer import Customer
@@ -107,11 +108,18 @@ async def list_customers(
         Customer.organization_id == current_user.organization_id,
     ]
     if search:
-        term = f"%{search.strip()}%"
+        # Escape LIKE wildcards so "%" or "_" match literally.
+        escaped = (
+            search.strip()
+            .replace("\\", "\\\\")
+            .replace("%", "\\%")
+            .replace("_", "\\_")
+        )
+        term = f"%{escaped}%"
         filters.append(
             or_(
-                Customer.display_name.ilike(term),
-                Customer.email.ilike(term),
+                Customer.display_name.ilike(term, escape="\\"),
+                Customer.email.ilike(term, escape="\\"),
             )
         )
     total = await session.scalar(
@@ -143,7 +151,7 @@ async def list_customers(
     summary="Get one customer",
 )
 async def get_customer(
-    customer_id: int,
+    customer_id: DbId,
     current_user: Annotated[
         User,
         Depends(get_current_user),
@@ -163,7 +171,7 @@ async def get_customer(
     summary="Update a customer",
 )
 async def update_customer(
-    customer_id: int,
+    customer_id: DbId,
     payload: CustomerUpdate,
     current_user: Annotated[
         User,
@@ -206,7 +214,7 @@ async def update_customer(
     summary="Delete a customer",
 )
 async def delete_customer(
-    customer_id: int,
+    customer_id: DbId,
     current_user: Annotated[
         User,
         Depends(get_current_owner),

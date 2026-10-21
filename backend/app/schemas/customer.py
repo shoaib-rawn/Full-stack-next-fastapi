@@ -1,6 +1,13 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    EmailStr,
+    Field,
+    field_validator,
+    model_validator,
+)
 
 
 class CustomerCreate(BaseModel):
@@ -19,6 +26,12 @@ class CustomerCreate(BaseModel):
         examples=["ali@example.com"],
     )
 
+    # Emails are case-insensitive; store one form so uniqueness holds.
+    @field_validator("email")
+    @classmethod
+    def lowercase_email(cls, value: str | None) -> str | None:
+        return value.lower() if value is not None else None
+
 
 class CustomerUpdate(BaseModel):
     display_name: str | None = Field(
@@ -35,6 +48,23 @@ class CustomerUpdate(BaseModel):
         default=None,
         examples=[True],
     )
+
+    @field_validator("email")
+    @classmethod
+    def lowercase_email(cls, value: str | None) -> str | None:
+        return value.lower() if value is not None else None
+
+    @model_validator(mode="after")
+    def reject_empty_and_null(self) -> "CustomerUpdate":
+        if not self.model_fields_set:
+            raise ValueError("At least one field must be provided.")
+        # Only the optional email may be cleared with null.
+        if any(
+            getattr(self, field) is None
+            for field in self.model_fields_set - {"email"}
+        ):
+            raise ValueError("Only email can be null.")
+        return self
 
 
 class CustomerResponse(BaseModel):

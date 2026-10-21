@@ -203,6 +203,18 @@ const flows = {
       { icon: "🗄️", label: "Database", sub: "selectinload", detail: "Invoices and their line items come back in two queries (no N+1).", tone: "db" },
     ],
   },
+  reports: {
+    title: "Building dashboard summary",
+    method: "GET",
+    packet: "📊",
+    nodes: [
+      { icon: "📋", label: "useQuery", sub: "summary key", detail: "TanStack Query requests one dashboard summary contract.", tone: "blue" },
+      bff("/api/reports/summary", "Next.js reads the HttpOnly token and forwards the request."),
+      authGuard,
+      { icon: "🏢", label: "Tenant scope", sub: "WHERE org_id", detail: "Every customer and invoice aggregate is restricted to your organization.", tone: "green" },
+      { icon: "🧮", label: "Aggregates", sub: "COUNT + SUM", detail: "PostgreSQL counts statuses and groups financial totals by currency.", tone: "db" },
+    ],
+  },
   invoice: {
     title: "Loading invoice",
     method: "GET",
@@ -412,6 +424,7 @@ const failureTitles: Record<FlowName, string> = {
   update: "Changes not saved",
   delete: "Customer not deleted",
   invoices: "Could not load invoices",
+  reports: "Could not build dashboard summary",
   invoice: "Could not load invoice",
   "invoice-create": "Invoice not created",
   "invoice-update": "Invoice not saved",

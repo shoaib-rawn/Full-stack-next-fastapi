@@ -2,13 +2,15 @@ from typing import Annotated
 
 from fastapi import Query
 
+from app.core.limits import DB_ID_MAX
+
 
 class PaginationParams:
     def __init__(
         self,
         page: Annotated[
             int,
-            Query(ge=1, description="One-based page number."),
+            Query(ge=1, le=DB_ID_MAX, description="One-based page number."),
         ] = 1,
         size: Annotated[
             int,

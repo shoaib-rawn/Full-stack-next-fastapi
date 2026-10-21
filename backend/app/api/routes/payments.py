@@ -6,6 +6,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies.auth import get_current_owner, get_current_user
+from app.api.dependencies.ids import DbId
 from app.api.dependencies.pagination import PaginationParams
 from app.db.session import get_db_session
 from app.models.invoice import Invoice
@@ -40,7 +41,7 @@ reversal_router = APIRouter(
     summary="Record a payment against an invoice",
 )
 async def create_payment(
-    invoice_id: int,
+    invoice_id: DbId,
     payload: PaymentCreate,
     current_user: Annotated[
         User,
@@ -103,7 +104,7 @@ async def create_payment(
     summary="List payments for one invoice",
 )
 async def list_payments(
-    invoice_id: int,
+    invoice_id: DbId,
     current_user: Annotated[
         User,
         Depends(get_current_user),
@@ -167,7 +168,7 @@ async def list_payments(
     ),
 )
 async def reverse_payment(
-    payment_id: int,
+    payment_id: DbId,
     payload: PaymentReverseRequest,
     current_user: Annotated[
         User,

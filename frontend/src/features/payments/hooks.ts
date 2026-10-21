@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { invoiceKeys } from "@/features/invoices/hooks";
+import { dashboardKeys } from "@/features/dashboard/hooks";
 import { withMinDuration } from "@/lib/demo-delay";
 
 import { createPayment, getPayments, reversePayment } from "./api";
@@ -31,6 +32,7 @@ export function useCreatePayment(invoiceId: number) {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: paymentKeys.all });
       void queryClient.invalidateQueries({ queryKey: invoiceKeys.all });
+      void queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
     },
   });
 }
@@ -45,6 +47,7 @@ export function useReversePayment(invoiceId: number, paymentId: number) {
       void queryClient.invalidateQueries({ queryKey: paymentKeys.all });
       void queryClient.invalidateQueries({ queryKey: invoiceKeys.detail(invoiceId) });
       void queryClient.invalidateQueries({ queryKey: invoiceKeys.all });
+      void queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
     },
   });
 }
