@@ -1,0 +1,6 @@
+<!-- Placeholder: replace with the official PSEB logo (same file name). -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Pakistan Software Export Board">
+  <rect x="4" y="4" width="112" height="112" rx="24" fill="#ffffff" stroke="#0a7a3d" stroke-width="6"/>
+  <text x="60" y="66" text-anchor="middle" font-family="Arial, sans-serif" font-size="30" font-weight="900" fill="#0a7a3d">PSEB</text>
+  <rect x="26" y="78" width="68" height="6" rx="3" fill="#0e61b8"/>
+</svg>
