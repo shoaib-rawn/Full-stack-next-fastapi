@@ -151,6 +151,11 @@ export default function Home() {
               deployment. Thank you for the guidance, the opportunity and the
               trust that made this journey possible.
             </p>
+            <p className="mt-4 max-w-2xl text-lg leading-8 text-[#58718c]">
+              The learning continues: I am now building new skills in AI and
+              Machine Learning through PSEB&apos;s three-month bootcamp. PSEB has
+              proved truly valuable for my growth.
+            </p>
           </div>
 
           <TributeCard />
