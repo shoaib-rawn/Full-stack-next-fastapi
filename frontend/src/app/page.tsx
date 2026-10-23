@@ -32,6 +32,54 @@ const majorSkills = [
   "Docker & CI",
 ];
 
+// The four places a request passes through, left to right.
+const lanes = [
+  { name: "Browser", tech: "React 19 · TanStack Query", color: "#1267c9" },
+  { name: "Next.js server", tech: "Route Handler (BFF)", color: "#7a3fd1" },
+  { name: "FastAPI", tech: "Python · Pydantic · JWT", color: "#159447" },
+  { name: "PostgreSQL", tech: "SQLAlchemy 2 async", color: "#be850b" },
+];
+
+// One real request, e.g. "Create customer", step by step.
+const journey = [
+  {
+    lane: 0,
+    title: "Validate in the browser",
+    text: "React Hook Form and Zod check the input first, so a bad email never leaves the page.",
+    concept: "Client-side validation",
+  },
+  {
+    lane: 0,
+    title: "Call our own Next.js API",
+    text: "TanStack Query runs the mutation and Axios sends it to /api/customers on the same domain. The browser attaches the HttpOnly session cookie by itself, so JavaScript never sees the token.",
+    concept: "Same-origin request · HttpOnly cookie",
+  },
+  {
+    lane: 1,
+    title: "Next.js acts as the middleman",
+    text: "A Route Handler reads the cookie on the server, turns it into an Authorization: Bearer header and forwards the request to FastAPI. This is the Backend-for-Frontend (BFF) pattern.",
+    concept: "BFF · server-side secrets",
+  },
+  {
+    lane: 2,
+    title: "FastAPI checks everything again",
+    text: "Middleware adds a request ID for logging. Dependency injection verifies the JWT, loads the user and their organization, and Pydantic validates the body. The server never trusts the client.",
+    concept: "Dependency injection · JWT · Pydantic",
+  },
+  {
+    lane: 3,
+    title: "Save safely in the database",
+    text: "A service writes through SQLAlchemy inside a transaction, always filtered by organization_id, so one company can never read another company's data.",
+    concept: "Transactions · multi-tenant isolation",
+  },
+  {
+    lane: 0,
+    title: "The answer travels back",
+    text: "FastAPI returns typed JSON, Next.js passes the status through, and TanStack Query invalidates the customer list so the screen refreshes. If the token expired, Axios refreshes it once and retries.",
+    concept: "Cache invalidation · token refresh",
+  },
+];
+
 const tributeUrl = "https://internshipdays-wishes.vercel.app/index.html";
 
 export default function Home() {
@@ -200,6 +248,93 @@ export default function Home() {
               </li>
             ))}
           </ul>
+
+          <div className="mt-20 grid gap-10 lg:grid-cols-[0.9fr_1.1fr]">
+            <div className="lg:sticky lg:top-8 lg:self-start">
+              <p className="inline-flex rounded-md bg-[#ffe3eb] px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-[#a3234c]">
+                How a request travels
+              </p>
+              <h2 className="mt-4 text-3xl font-black tracking-[-0.04em] text-[#082d63] sm:text-4xl">
+                From a click in the browser to the database, and back.
+              </h2>
+              <p className="mt-5 text-lg leading-8 text-[#58718c]">
+                When I started, the hardest question for me was simple: how does
+                one click actually reach the server? LedgerLite answers it
+                visually. Every request passes through four layers, and each
+                layer has one clear job.
+              </p>
+              <p className="mt-4 leading-7 text-[#58718c]">
+                Inside the app you can watch this live: the request animation
+                shows the real steps and timings of each call, read from the
+                server&apos;s own trace.
+              </p>
+
+              <div className="mt-8 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-2xl border-2 border-[#83cff4] bg-white p-5">
+                  <p className="text-xs font-black uppercase tracking-[0.18em] text-[#1267c9]">
+                    For beginners
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-[#58718c]">
+                    See the full path of a request: client, server, API and
+                    database, and why each step exists.
+                  </p>
+                </div>
+                <div className="rounded-2xl border-2 border-[#83cff4] bg-white p-5">
+                  <p className="text-xs font-black uppercase tracking-[0.18em] text-[#159447]">
+                    For seniors
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-[#58718c]">
+                    BFF auth with HttpOnly cookies, refresh rotation, tenant
+                    isolation and cache invalidation in one real codebase.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-4xl border-2 border-[#082d63] bg-white p-5 shadow-[0_10px_0_rgba(8,45,99,0.12)] sm:p-7">
+              <ol className="grid grid-cols-2 gap-2 sm:grid-cols-4" aria-label="Layers">
+                {lanes.map((lane, index) => (
+                  <li
+                    key={lane.name}
+                    className="relative rounded-2xl px-3 py-3 text-white"
+                    style={{ backgroundColor: lane.color }}
+                  >
+                    <p className="text-[10px] font-black uppercase tracking-[0.16em] opacity-80">
+                      Layer {index + 1}
+                    </p>
+                    <p className="mt-1 text-sm font-black">{lane.name}</p>
+                    <p className="text-[11px] opacity-90">{lane.tech}</p>
+                  </li>
+                ))}
+              </ol>
+
+              <ol className="relative mt-6 space-y-4 before:absolute before:bottom-4 before:left-[19px] before:top-4 before:w-0.5 before:bg-[#d7e6f3]">
+                {journey.map((step, index) => {
+                  const lane = lanes[step.lane];
+                  return (
+                    <li key={step.title} className="relative flex gap-4">
+                      <span
+                        className="z-10 grid size-10 shrink-0 place-items-center rounded-full text-sm font-black text-white ring-4 ring-white"
+                        style={{ backgroundColor: lane.color }}
+                      >
+                        {index + 1}
+                      </span>
+                      <div className="pb-1">
+                        <p className="text-[11px] font-black uppercase tracking-[0.16em]" style={{ color: lane.color }}>
+                          {lane.name}
+                        </p>
+                        <p className="font-black text-[#082d63]">{step.title}</p>
+                        <p className="mt-1 text-sm leading-6 text-[#58718c]">{step.text}</p>
+                        <p className="mt-2 inline-flex rounded-md bg-[#f0f6fc] px-2 py-0.5 text-[11px] font-bold text-[#0b2e59]">
+                          {step.concept}
+                        </p>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+          </div>
         </div>
       </section>
     </main>
