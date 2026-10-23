@@ -75,3 +75,10 @@ npm run build
 
 The GitHub Actions workflow runs these checks automatically. See
 [DEPLOYMENT.md](DEPLOYMENT.md) for the free-tier deployment journey.
+
+## Source-code rights
+
+Copyright (c) 2026 Shoaib Hassan. All rights reserved. This repository is
+available for portfolio review only; copying, redistribution, modification,
+publication, or commercial use requires prior written permission. See
+[LICENSE](LICENSE).
