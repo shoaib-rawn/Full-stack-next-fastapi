@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { ApiStatus } from "@/components/api-status";
 import { LandingRequestDemo } from "@/components/landing-request-demo";
+import { TributeCard } from "@/components/tribute-card";
 import {
   ConceptStep,
   MiniCompanyCache,
@@ -32,8 +33,6 @@ const majorSkills = [
   "Tailwind CSS",
   "Docker & CI",
 ];
-
-const tributeUrl = "https://internshipdays-wishes.vercel.app/index.html";
 
 export default function Home() {
   return (
@@ -154,29 +153,7 @@ export default function Home() {
             </p>
           </div>
 
-          <a
-            href={tributeUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group rounded-4xl border-2 border-[#082d63] bg-linear-to-br from-[#073979] via-[#0e61b8] to-[#082d63] p-8 text-white shadow-[0_10px_0_#041a3a] transition hover:-translate-y-1 hover:shadow-[0_14px_0_#041a3a]"
-          >
-            <div className="flex items-center gap-3">
-              <span className="grid size-14 place-items-center rounded-2xl bg-white text-3xl" aria-hidden>
-                🎓
-              </span>
-              <p className="text-xs font-black uppercase tracking-[0.22em] text-[#ffd65a]">
-                Internship days
-              </p>
-            </div>
-            <p className="mt-6 text-3xl font-black tracking-[-0.03em]">Tribute to PSEB</p>
-            <p className="mt-3 leading-7 text-[#d7edff]">
-              A small page of wishes and memories from my internship days.
-            </p>
-            <span className="mt-8 inline-flex items-center gap-2 rounded-xl bg-[#ffd65a] px-5 py-3 font-black text-[#082d63] shadow-[0_4px_0_#be850b]">
-              Open tribute
-              <span className="transition-transform group-hover:translate-x-1" aria-hidden>→</span>
-            </span>
-          </a>
+          <TributeCard />
         </div>
       </section>
 
