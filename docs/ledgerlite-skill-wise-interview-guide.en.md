@@ -46,7 +46,7 @@ Do not memorize code. Understand the request journey and the decision behind eac
 | 23 | CORS, SameSite cookies and BFF boundary | Implemented; dedicated CSRF token pending |
 | 24 | Structured logging and Request ID | Implemented |
 | 25 | Pytest, HTTPX and integration testing | Backend implemented; frontend tests pending |
-| 26 | Docker Compose, volumes and health checks | PostgreSQL/Redis implemented; app images pending |
+| 26 | Docker Compose, volumes and health checks | PostgreSQL/Redis Compose and backend image implemented |
 | 27 | TypeScript and API contracts | Implemented |
 | 28 | Next.js 16 App Router | Implemented |
 | 29 | Server/Client Components and Suspense | Implemented |
@@ -66,6 +66,7 @@ Do not memorize code. Understand the request journey and the decision behind eac
 | 43 | Installed vs actually implemented skills | Honest boundary documented |
 | 44 | Axios typed client, interceptors and refresh retry | Implemented |
 | 45 | Reporting aggregates, invoice filters and Chart.js | Implemented end-to-end |
+| 46 | Docker deployment, GitHub Actions CI and cloud environment config | Implemented; live deployment pending |
 
 ---
 
@@ -1599,7 +1600,7 @@ services:
 
 ### Note
 
-The current Compose containerizes **only PostgreSQL and Redis**. FastAPI/frontend Dockerfiles and a full production Compose are still pending.
+The current Compose containerizes local PostgreSQL and Redis. The FastAPI production Dockerfile is implemented and locally build-verified. The frontend uses Vercel's managed Next.js runtime, so it does not need a production container.
 
 ### Interview questions
 
@@ -2430,7 +2431,7 @@ Backend:
 
 ### Note
 
-Passing checks are not complete proof of correctness. User workflows, security and accessibility testing are also needed. GitHub Actions CI is currently pending.
+Passing checks are not complete proof of correctness. User workflows, security and accessibility testing are also needed. GitHub Actions now runs these checks on every relevant push and pull request.
 
 ### Interview questions
 
@@ -2614,7 +2615,7 @@ rg -n 'websocket|socket.io' backend/app frontend/src
 | HTML Canvas | Not used |
 | Vitest/Jest/Supertest | Not used in this project |
 | Playwright | Not implemented yet |
-| GitHub Actions | No workflow yet |
+| GitHub Actions | Backend tests/migrations and frontend checks workflow implemented |
 | Vercel/backend deployment | Not completed yet |
 | Explicit CSRF token | Not implemented; SameSite cookie mitigation exists |
 | Full Docker app stack | DB/Redis only; API/frontend images pending |
@@ -2641,7 +2642,7 @@ These are alternative ORMs/ecosystems. SQLAlchemy is the natural choice for a Fa
 In the FastAPI stack, pytest + HTTPX AsyncClient integration testing fulfill the equivalent responsibility.
 
 **Q4. Is the project production-ready?**  
-“It is production-minded and demonstrates strong security/accounting patterns, but frontend tests, CI/CD, full containerization, deployment, explicit CSRF hardening and monitoring integration are remaining production steps.”
+“It is production-minded and demonstrates strong security/accounting patterns. CI and backend container packaging are implemented; live deployment, frontend automated tests, explicit CSRF hardening and monitoring integration are remaining production steps.”
 
 ---
 
@@ -2826,6 +2827,86 @@ The dashboard doughnut chart displays issued, partially paid, paid and void invo
 
 **Q10. Are one request and one SQL query the same?**
 No. The browser calls one summary endpoint; the backend may execute multiple efficient aggregates for clarity and currency correctness.
+
+---
+
+## Skill 46 — Docker deployment, GitHub Actions CI and cloud environment config
+
+### Define
+
+Deployment runs the local application in a repeatable cloud runtime. A Docker image packages the backend environment. CI runs automated checks on every relevant push. Environment variables keep secrets and provider URLs outside source code.
+
+### Problem
+
+Working locally does not prove deployment readiness. A cloud process must bind to its assigned port, migrate the schema, connect to hosted PostgreSQL and Redis, and reject broken changes before release. Committing secrets creates a lasting security leak.
+
+### LedgerLite solution
+
+The backend `Dockerfile` installs dependencies and runs `alembic upgrade head` before Uvicorn. Root `render.yaml` describes the Render service, health path and safe defaults. Vercel builds `ledgerlite/frontend` and calls Render through server-only `API_URL`. Neon PostgreSQL and Upstash Redis credentials stay in provider environment variables. GitHub Actions runs backend migrations/tests and frontend typecheck/lint/build.
+
+### Code
+
+```dockerfile
+CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+```
+
+```yaml
+- run: alembic upgrade head
+- run: pytest
+- run: npm run typecheck
+- run: npm run lint
+- run: npm run build
+```
+
+```text
+Browser -> Vercel Next.js -> Render FastAPI
+                              |-> Neon PostgreSQL
+                              `-> Upstash Redis
+```
+
+### Benefits
+
+- A fresh environment reaches the expected schema through migration history.
+- The application uses Render's dynamic `PORT`.
+- Secrets remain outside the repository and browser bundle.
+- Pull requests catch backend and frontend regressions early.
+- `/health` checks the process and `/health/ready` checks PostgreSQL and Redis.
+
+### Note
+
+A free Render service sleeps after inactivity, so its first request can be slow. Free tiers suit demos and portfolios, not SLA-backed production. Running migrations in the start command is simple for one portfolio instance; multi-instance production should use a separate release job.
+
+### Interview questions
+
+**Q1. Why deploy frontend and backend to different providers?**
+Vercel is optimized for Next.js runtime and CDN, while Render can run a long-lived Python ASGI service.
+
+**Q2. Why bind to `0.0.0.0`?**
+The hosting proxy can reach the process only when it listens on every container interface instead of localhost alone.
+
+**Q3. Why use `$PORT` instead of hardcoded 8000?**
+The cloud provider assigns the runtime port. Without `$PORT`, routing and health checks cannot reach the process.
+
+**Q4. Why run Alembic before deployment startup?**
+The database must match the schema expected by new code. Migrations bring it to the expected revision repeatably.
+
+**Q5. Why keep secrets out of Git?**
+A deleted secret can remain recoverable from Git history. The provider secret store injects it only at runtime.
+
+**Q6. Why is `API_URL` not `NEXT_PUBLIC_API_URL`?**
+The Next.js server/BFF calls FastAPI. A server-only variable is not published in the browser JavaScript bundle.
+
+**Q7. What is the difference between CI and deployment?**
+CI tests and builds code as a quality gate. Deployment releases verified code to the live environment.
+
+**Q8. Health vs readiness?**
+`/health` checks that the process responds. `/health/ready` pings PostgreSQL and Redis to check real request readiness.
+
+**Q9. Why is Docker Compose different from the production cloud setup?**
+Compose runs local PostgreSQL and Redis. Managed Neon and Upstash handle cloud persistence, TLS and operations.
+
+**Q10. Why can the first free Render request be slow?**
+An idle free service spins down. The next request starts it again; this is a cold start rather than an application bug.
 
 ---
 

@@ -46,7 +46,7 @@ Code ratta nahi karna. Har snippet ki request journey aur decision samajhna hai.
 | 23 | CORS, SameSite cookies and BFF boundary | Implemented; dedicated CSRF token pending |
 | 24 | Structured logging and Request ID | Implemented |
 | 25 | Pytest, HTTPX and integration testing | Backend implemented; frontend tests pending |
-| 26 | Docker Compose, volumes and health checks | PostgreSQL/Redis implemented; app images pending |
+| 26 | Docker Compose, volumes and health checks | PostgreSQL/Redis Compose and backend image implemented |
 | 27 | TypeScript and API contracts | Implemented |
 | 28 | Next.js 16 App Router | Implemented |
 | 29 | Server/Client Components and Suspense | Implemented |
@@ -66,6 +66,7 @@ Code ratta nahi karna. Har snippet ki request journey aur decision samajhna hai.
 | 43 | Installed vs actually implemented skills | Honest boundary documented |
 | 44 | Axios typed client, interceptors and refresh retry | Implemented |
 | 45 | Reporting aggregates, invoice filters and Chart.js | Implemented end-to-end |
+| 46 | Docker deployment, GitHub Actions CI and cloud environment config | Implemented; live deployment pending |
 
 ---
 
@@ -1599,7 +1600,7 @@ services:
 
 ### Note
 
-Current Compose **sirf PostgreSQL aur Redis** containerize karta hai. FastAPI/frontend Dockerfiles aur full production Compose abhi pending hain.
+Current Compose local PostgreSQL aur Redis containerize karta hai. FastAPI ka production Dockerfile bhi implemented aur locally build-verified hai. Frontend Vercel ke managed Next.js runtime par deploy hota hai, is liye usay production container ki zaroorat nahi.
 
 ### Interview questions
 
@@ -2430,7 +2431,7 @@ Backend:
 
 ### Note
 
-Checks passing correctness ka complete proof nahi. User workflows, security and accessibility testing bhi chahiye. GitHub Actions CI currently pending hai.
+Checks passing correctness ka complete proof nahi. User workflows, security and accessibility testing bhi chahiye. GitHub Actions ab ye checks har relevant push aur pull request par chalati hai.
 
 ### Interview questions
 
@@ -2614,7 +2615,7 @@ rg -n 'websocket|socket.io' backend/app frontend/src
 | HTML Canvas | Not used |
 | Vitest/Jest/Supertest | Not used in this project |
 | Playwright | Not implemented yet |
-| GitHub Actions | No workflow yet |
+| GitHub Actions | Backend tests/migrations and frontend checks workflow implemented |
 | Vercel/backend deployment | Not completed yet |
 | Explicit CSRF token | Not implemented; SameSite cookie mitigation exists |
 | Full Docker app stack | DB/Redis only; API/frontend images pending |
@@ -2641,7 +2642,7 @@ Ye alternative ORMs/ecosystems hain. FastAPI/Python project ke liye SQLAlchemy n
 FastAPI stack mein pytest + HTTPX AsyncClient integration testing equivalent responsibility fulfill karte hain.
 
 **Q4. Kya project production-ready hai?**  
-“It is production-minded and demonstrates strong security/accounting patterns, but frontend tests, CI/CD, full containerization, deployment, explicit CSRF hardening and monitoring integration are remaining production steps.”
+“It is production-minded and demonstrates strong security/accounting patterns. CI and backend container packaging are implemented; live deployment, frontend automated tests, explicit CSRF hardening and monitoring integration are remaining production steps.”
 
 ---
 
@@ -2826,6 +2827,86 @@ Dashboard ka doughnut chart issued, partially paid, paid aur void invoice counts
 
 **Q10. One request aur one SQL query same hain?**
 Nahi. Browser ek summary endpoint call karta hai; backend clarity aur currency correctness ke liye multiple efficient aggregate queries chala sakta hai.
+
+---
+
+## Skill 46 — Docker deployment, GitHub Actions CI and cloud environment config
+
+### Define
+
+Deployment local application ko repeatable cloud runtime mein chalata hai. Docker image backend environment package karti hai. CI har relevant push par automated checks chalati hai. Environment variables secrets aur provider URLs ko source code se bahar rakhti hain.
+
+### Problem
+
+Local machine par chalna production readiness prove nahi karta. Cloud process ko assigned port par bind karna, schema migrate karna, hosted PostgreSQL/Redis connect karna aur broken commit ko release se pehle rokna hota hai. Secret Git mein rakhna lasting security leak hota.
+
+### LedgerLite solution
+
+Backend `Dockerfile` dependencies install karke container start par `alembic upgrade head` aur phir Uvicorn chalata hai. Root `render.yaml` Render service, health path aur safe defaults describe karta hai. Vercel `ledgerlite/frontend` build karta hai aur server-only `API_URL` se Render ko call karta hai. Neon PostgreSQL aur Upstash Redis credentials provider environment variables mein rehte hain. GitHub Actions backend migrations/tests aur frontend typecheck/lint/build chalati hai.
+
+### Code
+
+```dockerfile
+CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+```
+
+```yaml
+- run: alembic upgrade head
+- run: pytest
+- run: npm run typecheck
+- run: npm run lint
+- run: npm run build
+```
+
+```text
+Browser -> Vercel Next.js -> Render FastAPI
+                              |-> Neon PostgreSQL
+                              `-> Upstash Redis
+```
+
+### Benefits
+
+- Fresh environment same migration history se database banata hai.
+- Application Render ka dynamic `PORT` use karti hai.
+- Secrets repository aur browser bundle se bahar rehte hain.
+- Pull request par backend aur frontend regression jaldi detect hoti hai.
+- `/health` process aur `/health/ready` PostgreSQL/Redis chain verify karte hain.
+
+### Note
+
+Free Render service idle hone ke baad sleep karti hai, is liye first request slow ho sakti hai. Free tiers demo/portfolio ke liye hain, uptime SLA production ke liye nahi. Single-instance portfolio mein migration start command simple hai; multi-instance production mein migration separate release job honi chahiye.
+
+### Interview questions
+
+**Q1. Frontend aur backend alag providers par kyun deploy kiye?**
+Vercel Next.js runtime/CDN ke liye optimized hai, jabke Render long-running Python ASGI service chala sakta hai.
+
+**Q2. `0.0.0.0` par bind kyun karte hain?**
+Hosting proxy request tabhi reach karti hai jab server localhost ke bajaye saare container interfaces par listen kare.
+
+**Q3. `$PORT` hardcoded 8000 se behtar kyun hai?**
+Cloud provider runtime par port assign karta hai. `$PORT` ke baghair routing aur health check process tak nahi pohanchte.
+
+**Q4. Deploy start se pehle Alembic migration kyun?**
+New code jis schema ko expect karta hai woh database mein hona chahiye. Migration schema ko repeatably expected revision tak laati hai.
+
+**Q5. Secrets Git mein commit kyun nahi karte?**
+Git history se deleted secret bhi recover ho sakta hai. Provider secret store value sirf runtime par inject karta hai.
+
+**Q6. `API_URL` ko `NEXT_PUBLIC_API_URL` kyun nahi banaya?**
+FastAPI calls Next.js server/BFF karta hai. Server-only variable browser JavaScript bundle mein publish nahi hota.
+
+**Q7. CI aur deployment mein difference?**
+CI code ko test/build karke quality gate deti hai. Deployment verified code ko live environment mein release karti hai.
+
+**Q8. Health aur readiness mein difference?**
+`/health` process response check karta hai. `/health/ready` database aur Redis ko ping karke real request readiness check karta hai.
+
+**Q9. Docker Compose aur production cloud setup same kyun nahi?**
+Compose local PostgreSQL/Redis chalata hai. Cloud mein managed Neon/Upstash persistence, TLS aur operations handle karte hain.
+
+**Q10. Free Render par first request slow kyun ho sakti hai?**
+Idle free service spin down hoti hai. Next request process dobara start karti hai; ye cold start hai, application bug nahi.
 
 ---
 
