@@ -1,5 +1,7 @@
 # LedgerLite
 
+[![Deploy API to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/shoaib-rawn/Full-stack-next-fastapi)
+
 LedgerLite is a secure, multi-tenant accounting workspace built with Next.js
 and FastAPI. Each organization manages its own team, customers, invoices,
 payments and dashboard totals without exposing data to another tenant.
