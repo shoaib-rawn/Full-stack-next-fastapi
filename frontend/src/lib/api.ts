@@ -8,7 +8,7 @@ type ApiHealth = {
   message: string;
 };
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+const apiUrl = process.env.API_URL ?? "http://127.0.0.1:8000";
 
 export async function getApiHealth(): Promise<ApiHealth> {
   try {
@@ -33,7 +33,7 @@ export async function getApiHealth(): Promise<ApiHealth> {
   } catch {
     return {
       online: false,
-      message: "Start FastAPI on http://127.0.0.1:8000.",
+      message: "The API is unavailable right now.",
     };
   }
 }

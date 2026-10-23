@@ -158,6 +158,12 @@ const categoryStyles: Record<
     border: "#c7b0ef",
     icon: "📊",
   },
+  "Production & deployment": {
+    solid: "#087f8c",
+    soft: "#e1f7f8",
+    border: "#80ccd1",
+    icon: "☁️",
+  },
   "Additional skills": {
     solid: "#44546a",
     soft: "#edf2f7",

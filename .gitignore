@@ -13,6 +13,8 @@ frontend/.next/
 
 # Local tooling
 .claude/
+.eda_python_packages/
+.tmp_pdf_reader/
 /intent/
 /CLAUDE.md
 /frontend/AGENTS.md

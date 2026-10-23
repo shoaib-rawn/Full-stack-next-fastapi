@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { connection } from "next/server";
 import { SessionActivityGuard } from "@/components/auth/session-activity-guard";
 import { DashboardNav, DashboardNavSkeleton } from "@/components/dashboard-nav";
 import { getCurrentUser } from "@/lib/server-auth";
@@ -25,6 +26,10 @@ export default function DashboardLayout({
 }
 
 async function RoleAwareNavigation() {
+  // The navigation depends on the current request's HttpOnly cookie and a
+  // live FastAPI response. Make that request-time boundary explicit so Cache
+  // Components never try to prerender it with an unstable internal clock.
+  await connection();
   const user = await getCurrentUser();
 
   return (
