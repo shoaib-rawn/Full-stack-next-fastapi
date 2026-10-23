@@ -1,90 +1,73 @@
-// Landing-page picture of the in-app "Loading customers" animation, shown
-// in its finished state (no motion) with example timings and rows.
-const nodes = [
-  { icon: "📋", label: "useQuery", sub: "TanStack", info: "sent", tone: "bg-[#e5f6ff] text-[#1267c9] border-[#72c8f1]", detail: "TanStack Query starts the request in the browser (no cache yet)." },
-  { icon: "N", label: "/api/customers", sub: "Next.js BFF", info: "219ms total", tone: "bg-[#082d63] text-white border-[#082d63]", detail: "Next.js reads the HttpOnly cookie and adds the token as a Bearer header." },
-  { icon: "🛡️", label: "Auth guard", sub: "get_current_user", info: "✓ 200 · 215ms", tone: "bg-[#fff4c8] text-[#7a5a05] border-[#f0c557]", detail: "FastAPI verifies the JWT and reloads you from the database (active, role, token version)." },
-  { icon: "🏢", label: "Tenant filter", sub: "WHERE org_id", info: "passed", tone: "bg-[#e0f5ef] text-[#0f8a6d] border-[#7fd3bd]", detail: "Only your organization's rows, with OFFSET/LIMIT pagination." },
-  { icon: "🗄️", label: "Database", sub: "SELECT", info: "3 rows", tone: "bg-[#e9f0ff] text-[#3046a8] border-[#9fb0f0]", detail: "PostgreSQL returns the rows and they fill the table." },
-];
+import Link from "next/link";
 
-const rows = [
-  { name: "Ali Traders", email: "accounts@alitraders.example", status: "Active" },
-  { name: "Noor Textiles", email: "billing@noortextiles.example", status: "Active" },
-  { name: "Hassan & Co.", email: "finance@hassanco.example", status: "Archived" },
+// Landing-page teaser for the request journey. It shows the four layers of
+// the stack but keeps what happens between them hidden: the real step-by-step
+// animation is waiting inside the app.
+const layers = [
+  { icon: "🖥️", name: "Browser", tech: "React 19", color: "#1267c9" },
+  { icon: "N", name: "Next.js", tech: "BFF server", color: "#7a3fd1" },
+  { icon: "⚡", name: "FastAPI", tech: "Python API", color: "#159447" },
+  { icon: "🗄️", name: "PostgreSQL", tech: "Database", color: "#be850b" },
 ];
 
 export function LandingRequestDemo() {
   return (
-    <div className="rounded-3xl border-2 border-[#72c8f1] bg-white p-4 shadow-[0_8px_0_rgba(8,45,99,0.07)] sm:p-6">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="flex items-center gap-2 font-black text-[#28712f]">
-          <span className="grid size-5 place-items-center rounded-full bg-[#159447] text-xs text-white">✓</span>
-          Loading customers — done
-        </p>
-        <div className="flex items-center gap-2">
-          <span className="rounded-md bg-[#e8f8dc] px-2 py-1 text-[10px] font-black uppercase tracking-wider text-[#28712f]">
-            200 OK
-          </span>
-          <span className="rounded-md bg-[#1267c9] px-2 py-1 font-mono text-xs font-black text-white">GET</span>
-        </div>
-      </div>
+    <div className="relative overflow-hidden rounded-4xl border-2 border-[#082d63] bg-linear-to-br from-[#061f45] via-[#0a3a7a] to-[#061f45] p-6 text-white shadow-[0_12px_0_#041a3a] sm:p-10">
+      {/* Blueprint grid */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-[0.12]"
+        style={{
+          backgroundImage:
+            "linear-gradient(#ffffff 1px, transparent 1px), linear-gradient(90deg, #ffffff 1px, transparent 1px)",
+          backgroundSize: "32px 32px",
+        }}
+      />
+      <div aria-hidden className="pointer-events-none absolute -right-24 -top-24 size-80 rounded-full bg-[#69ccf5]/25 blur-3xl" />
 
-      <div className="mt-5 flex items-start">
-        {nodes.map((node, index) => (
-          <div key={node.label} className={index === 0 ? "flex" : "flex flex-1"}>
-            {index > 0 && (
-              <div className="mx-0.5 mt-6 h-1 flex-1 rounded-full bg-[#1267c9] sm:mx-1" />
-            )}
-
-            <div className="flex w-16 flex-col items-center text-center sm:w-28">
-              <span className="relative grid size-12 place-items-center sm:size-14">
-                <span
-                  className={`grid size-12 place-items-center rounded-2xl border-2 text-xl font-black sm:size-14 sm:text-2xl ${node.tone}`}
-                >
-                  {node.icon}
-                </span>
-                {index > 0 && (
-                  <span className="absolute -right-2 -top-2 grid size-5 place-items-center rounded-full border-2 border-white bg-[#159447] text-[10px] font-black text-white">
-                    ✓
+      <div className="relative grid gap-10 lg:grid-cols-[1.4fr_0.6fr] lg:items-center">
+        <ol className="flex items-center" aria-label="The four layers of LedgerLite">
+          {layers.map((layer, index) => (
+            <li key={layer.name} className={index === 0 ? "flex" : "flex flex-1 items-center"}>
+              {index > 0 && (
+                <div className="relative mx-1 flex flex-1 items-center sm:mx-2">
+                  <span className="h-0 flex-1 border-t-2 border-dashed border-white/40" />
+                  <span className="absolute left-1/2 grid size-7 -translate-x-1/2 place-items-center rounded-full border-2 border-[#ffd65a] bg-[#082d63] text-xs font-black text-[#ffd65a] sm:size-8 sm:text-sm">
+                    ?
                   </span>
-                )}
-              </span>
-              <p className="mt-2 break-all text-[10px] font-black leading-tight text-[#082d63] sm:text-xs">{node.label}</p>
-              <p className="text-[10px] text-[#58718c]">{node.sub}</p>
-              <p className="mt-1 rounded bg-[#eef6fb] px-1 font-mono text-[10px] font-bold text-[#0759a8]">
-                {node.info}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
+                </div>
+              )}
+              <div className="flex w-16 flex-col items-center text-center sm:w-28">
+                <span
+                  className="grid size-14 place-items-center rounded-2xl border-2 border-white/30 text-2xl font-black shadow-[0_6px_0_rgba(0,0,0,0.25)] sm:size-20 sm:text-3xl"
+                  style={{ backgroundColor: layer.color }}
+                >
+                  {layer.icon}
+                </span>
+                <p className="mt-3 text-xs font-black sm:text-sm">{layer.name}</p>
+                <p className="text-[10px] text-[#cceaff] sm:text-xs">{layer.tech}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
 
-      <p className="mt-5 rounded-xl bg-[#f7fcff] px-4 py-3 text-sm font-bold text-[#163e6b]">
-        <span className="mr-2 rounded-md bg-[#1267c9] px-2 py-0.5 text-xs text-white">5/5</span>
-        {nodes[nodes.length - 1].detail}
-      </p>
-
-      <div className="mt-4 overflow-hidden rounded-xl border-2 border-[#72c8f1] text-xs">
-        <div className="flex items-center justify-between bg-[#1267c9] px-3 py-2 font-black text-white">
-          Customers <span>+</span>
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-[#ffd65a]">
+            One click · four layers
+          </p>
+          <p className="mt-3 text-2xl font-black leading-tight tracking-[-0.03em] sm:text-3xl">
+            What happens between the click and the database?
+          </p>
+          <p className="mt-3 leading-7 text-[#d7edff]">
+            Sign in and watch a real request make the trip, step by step.
+          </p>
+          <Link
+            href="/login"
+            className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#ffd65a] px-5 py-3 font-black text-[#082d63] shadow-[0_4px_0_#be850b] transition hover:-translate-y-0.5"
+          >
+            Watch it live <span aria-hidden>→</span>
+          </Link>
         </div>
-        <div className="grid grid-cols-3 gap-2 bg-[#f7fcff] px-3 py-2 font-black text-[#082d63]">
-          <span>Name</span><span>Email</span><span>Status</span>
-        </div>
-        {rows.map((row) => (
-          <div key={row.name} className="grid grid-cols-3 gap-2 border-t border-[#d9edf7] px-3 py-2.5 text-[#163e6b]">
-            <span className="font-bold">{row.name}</span>
-            <span className="truncate">{row.email}</span>
-            <span>
-              <span
-                className={`rounded-full px-2 py-0.5 text-[10px] font-black ${row.status === "Active" ? "bg-[#e0f5ef] text-[#0f8a6d]" : "bg-[#eef1f4] text-[#657382]"}`}
-              >
-                {row.status}
-              </span>
-            </span>
-          </div>
-        ))}
       </div>
     </div>
   );
