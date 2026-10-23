@@ -42,7 +42,7 @@ export default function Home() {
         <div className="pointer-events-none absolute -right-36 -top-44 -z-10 size-136 rounded-full bg-[#69ccf5]/30 blur-3xl" />
         <div className="pointer-events-none absolute -left-44 top-72 -z-10 size-96 rounded-full bg-[#ffd65a]/20 blur-3xl" />
 
-        <div className="mx-auto mb-4 flex max-w-6xl items-center justify-between gap-4 rounded-2xl bg-white px-4 py-2 shadow-[0_8px_24px_rgba(4,30,68,0.25)] sm:px-6">
+        <div className="mx-auto mb-4 flex items-center justify-between gap-4 rounded-2xl bg-white px-4 py-2 shadow-[0_8px_24px_rgba(4,30,68,0.25)] sm:px-6">
           <Image
             src="/logos/pseb-logo.png"
             alt="Pakistan Software Export Board (PSEB) logo"
@@ -64,7 +64,7 @@ export default function Home() {
           />
         </div>
 
-        <nav className="mx-auto flex max-w-6xl items-center justify-between rounded-2xl border border-white/25 bg-white/10 px-4 py-3 shadow-xl backdrop-blur sm:px-5">
+        <nav className="mx-auto flex items-center justify-between rounded-2xl border border-white/25 bg-white/10 px-4 py-3 shadow-xl backdrop-blur sm:px-5">
           <div className="flex items-center gap-3">
             <span className="grid size-10 place-items-center rounded-xl border-2 border-white/70 bg-white/10 text-sm font-black text-white">
               LL
@@ -88,7 +88,7 @@ export default function Home() {
           </div>
         </nav>
 
-        <div className="mx-auto grid max-w-6xl gap-12 pb-4 pt-20 lg:grid-cols-[1.15fr_0.85fr] lg:items-end lg:pt-28">
+        <div className="mx-auto grid gap-12 pb-4 pt-20 lg:grid-cols-[1.15fr_0.85fr] lg:items-end lg:pt-28">
           <div>
             <p className="mb-5 inline-flex rounded-md bg-[#ffd65a] px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-[#082d63]">
               My LedgerLite Journey
@@ -136,7 +136,7 @@ export default function Home() {
       </section>
 
       <section className="flex items-center border-b-4 border-[#ffd65a] bg-white px-5 py-16 sm:px-8 lg:min-h-[44rem] lg:px-12 lg:py-20">
-        <div className="mx-auto grid w-full max-w-6xl gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
+        <div className="mx-auto grid w-full gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
           <div>
             <p className="inline-flex rounded-md bg-[#e8f8dc] px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-[#159447]">
               With gratitude
@@ -181,7 +181,7 @@ export default function Home() {
       </section>
 
       <section className="px-5 py-16 sm:px-8 lg:px-12 lg:py-20">
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto">
           <div className="max-w-2xl">
             <p className="inline-flex rounded-md bg-[#ffd65a] px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-[#082d63]">
               47 topics
