@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { ApiStatus } from "@/components/api-status";
+import { LandingRequestDemo } from "@/components/landing-request-demo";
 import {
   ConceptStep,
   MiniCompanyCache,
@@ -30,54 +31,6 @@ const majorSkills = [
   "Zod forms",
   "Tailwind CSS",
   "Docker & CI",
-];
-
-// The four places a request passes through, left to right.
-const lanes = [
-  { name: "Browser", tech: "React 19 · TanStack Query", color: "#1267c9" },
-  { name: "Next.js server", tech: "Route Handler (BFF)", color: "#7a3fd1" },
-  { name: "FastAPI", tech: "Python · Pydantic · JWT", color: "#159447" },
-  { name: "PostgreSQL", tech: "SQLAlchemy 2 async", color: "#be850b" },
-];
-
-// One real request, e.g. "Create customer", step by step.
-const journey = [
-  {
-    lane: 0,
-    title: "Validate in the browser",
-    text: "React Hook Form and Zod check the input first, so a bad email never leaves the page.",
-    concept: "Client-side validation",
-  },
-  {
-    lane: 0,
-    title: "Call our own Next.js API",
-    text: "TanStack Query runs the mutation and Axios sends it to /api/customers on the same domain. The browser attaches the HttpOnly session cookie by itself, so JavaScript never sees the token.",
-    concept: "Same-origin request · HttpOnly cookie",
-  },
-  {
-    lane: 1,
-    title: "Next.js acts as the middleman",
-    text: "A Route Handler reads the cookie on the server, turns it into an Authorization: Bearer header and forwards the request to FastAPI. This is the Backend-for-Frontend (BFF) pattern.",
-    concept: "BFF · server-side secrets",
-  },
-  {
-    lane: 2,
-    title: "FastAPI checks everything again",
-    text: "Middleware adds a request ID for logging. Dependency injection verifies the JWT, loads the user and their organization, and Pydantic validates the body. The server never trusts the client.",
-    concept: "Dependency injection · JWT · Pydantic",
-  },
-  {
-    lane: 3,
-    title: "Save safely in the database",
-    text: "A service writes through SQLAlchemy inside a transaction, always filtered by organization_id, so one company can never read another company's data.",
-    concept: "Transactions · multi-tenant isolation",
-  },
-  {
-    lane: 0,
-    title: "The answer travels back",
-    text: "FastAPI returns typed JSON, Next.js passes the status through, and TanStack Query invalidates the customer list so the screen refreshes. If the token expired, Axios refreshes it once and retries.",
-    concept: "Cache invalidation · token refresh",
-  },
 ];
 
 const tributeUrl = "https://internshipdays-wishes.vercel.app/index.html";
@@ -289,62 +242,8 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="mt-8 rounded-4xl border-2 border-[#082d63] bg-white p-5 shadow-[0_10px_0_rgba(8,45,99,0.12)] sm:p-7">
-              <ol className="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Layers">
-                {lanes.map((lane, index) => (
-                  <li
-                    key={lane.name}
-                    className="relative rounded-2xl px-4 py-3 text-white"
-                    style={{ backgroundColor: lane.color }}
-                  >
-                    <p className="text-[10px] font-black uppercase tracking-[0.16em] opacity-80">
-                      Layer {index + 1}
-                    </p>
-                    <p className="mt-1 font-black">{lane.name}</p>
-                    <p className="text-xs opacity-90">{lane.tech}</p>
-                    {index < lanes.length - 1 && (
-                      <span
-                        aria-hidden
-                        className="absolute -right-3 top-1/2 z-10 hidden size-6 -translate-y-1/2 place-items-center rounded-full bg-white text-sm font-black text-[#082d63] shadow lg:grid"
-                      >
-                        →
-                      </span>
-                    )}
-                  </li>
-                ))}
-              </ol>
-
-              <ol className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {journey.map((step, index) => {
-                  const lane = lanes[step.lane];
-                  return (
-                    <li
-                      key={step.title}
-                      className="rounded-2xl border-t-4 bg-[#f7fbff] p-4"
-                      style={{ borderColor: lane.color }}
-                    >
-                      <div className="flex items-center gap-3">
-                        <span
-                          className="grid size-8 shrink-0 place-items-center rounded-full text-sm font-black text-white"
-                          style={{ backgroundColor: lane.color }}
-                        >
-                          {index + 1}
-                        </span>
-                        <div>
-                          <p className="text-[10px] font-black uppercase tracking-[0.16em]" style={{ color: lane.color }}>
-                            {lane.name}
-                          </p>
-                          <p className="font-black leading-tight text-[#082d63]">{step.title}</p>
-                        </div>
-                      </div>
-                      <p className="mt-3 text-sm leading-6 text-[#58718c]">{step.text}</p>
-                      <p className="mt-2 inline-flex rounded-md bg-white px-2 py-0.5 text-[11px] font-bold text-[#0b2e59]">
-                        {step.concept}
-                      </p>
-                    </li>
-                  );
-                })}
-              </ol>
+            <div className="mt-8">
+              <LandingRequestDemo />
             </div>
           </div>
         </div>

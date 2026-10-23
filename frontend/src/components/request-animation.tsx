@@ -922,7 +922,7 @@ export function RequestOverlay({
   );
 }
 
-function TablePreview({ filled }: { filled: boolean }) {
+export function TablePreview({ filled }: { filled: boolean }) {
   return (
     <div className="mt-4 overflow-hidden rounded-xl border-2 border-[#72c8f1] text-xs">
       <div className="flex items-center justify-between bg-[#1267c9] px-3 py-2 font-black text-white">
