@@ -1,0 +1,7 @@
+<!-- Placeholder: replace with the official Ministry of IT & Telecom Pakistan logo (same file name). -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Ministry of IT and Telecom Pakistan">
+  <circle cx="60" cy="60" r="56" fill="#ffffff" stroke="#01411c" stroke-width="6"/>
+  <path d="M68 30a30 30 0 1 0 22 50a24 24 0 1 1-22-50z" fill="#01411c"/>
+  <path d="M84 40l3 8h8l-6.5 5 2.5 8-7-5-7 5 2.5-8-6.5-5h8z" fill="#01411c"/>
+  <text x="60" y="104" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#01411c">MoITT</text>
+</svg>
