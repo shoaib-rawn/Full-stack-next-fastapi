@@ -43,7 +43,7 @@ slow. That is a hosting limit, not an application error.
 ## 4. Deploy Next.js on Vercel
 
 1. Import the same GitHub repository in Vercel.
-2. Set **Root Directory** to `ledgerlite/frontend`.
+2. Set **Root Directory** to `frontend`.
 3. Add `API_URL=https://YOUR-API.onrender.com`.
 4. Add `NEXT_PUBLIC_LEARNING_MODE=false`.
 5. Deploy and copy the final `https://...vercel.app` URL.
@@ -72,6 +72,6 @@ boundary and supports the public health display.
 
 ## Automatic checks
 
-`.github/workflows/ledgerlite-ci.yml` runs backend migrations/tests and
+`.github/workflows/ci.yml` runs backend migrations/tests and
 frontend typecheck, ESLint and production build on relevant pushes and pull
 requests. Vercel and Render should deploy only after the GitHub checks pass.
