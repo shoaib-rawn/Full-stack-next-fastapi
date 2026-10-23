@@ -13,6 +13,7 @@ payments and dashboard totals without exposing data to another tenant.
 - Argon2 password hashing, JWT access/refresh rotation, RBAC and Redis rate limits
 - Tenant-scoped customer, invoice, payment, team and reporting workflows
 - Docker packaging, GitHub Actions CI and production health checks
+- Neon pooled runtime connections, direct Alembic migrations and branch policy
 
 ## Architecture
 

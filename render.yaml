@@ -16,6 +16,8 @@ services:
         value: "false"
       - key: DATABASE_URL
         sync: false
+      - key: DATABASE_URL_UNPOOLED
+        sync: false
       - key: REDIS_URL
         sync: false
       - key: JWT_SECRET_KEY
@@ -27,7 +29,7 @@ services:
       - key: REFRESH_TOKEN_EXPIRE_DAYS
         value: "7"
       - key: CORS_ORIGINS
-        sync: false
+        value: '["https://frontend-dun-nine-f6zfeizlan.vercel.app"]'
       - key: LOGIN_RATE_LIMIT_ATTEMPTS
         value: "5"
       - key: LOGIN_RATE_LIMIT_WINDOW_SECONDS

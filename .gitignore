@@ -26,3 +26,6 @@ frontend/.next/
 
 # Miscellaneous
 *.log
+.neon
+node_modules/
+.env.local
