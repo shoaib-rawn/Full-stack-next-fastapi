@@ -153,7 +153,11 @@ export default function Home() {
             </p>
             <p className="mt-4 max-w-2xl text-lg leading-8 text-[#58718c]">
               The learning continues: I am now building new skills in AI and
-              Machine Learning through PSEB&apos;s three-month bootcamp. PSEB has
+              Machine Learning through{" "}
+              <strong className="font-black text-[#082d63]">
+                PSEB&apos;s three-month bootcamp
+              </strong>
+              . PSEB has
               proved truly valuable for my growth.
             </p>
           </div>
