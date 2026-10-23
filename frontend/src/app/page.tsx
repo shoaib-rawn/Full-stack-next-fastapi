@@ -249,86 +249,98 @@ export default function Home() {
             ))}
           </ul>
 
-          <div className="mt-20 grid gap-10 lg:grid-cols-[0.9fr_1.1fr]">
-            <div className="lg:sticky lg:top-8 lg:self-start">
-              <p className="inline-flex rounded-md bg-[#ffe3eb] px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-[#a3234c]">
-                How a request travels
-              </p>
-              <h2 className="mt-4 text-3xl font-black tracking-[-0.04em] text-[#082d63] sm:text-4xl">
-                From a click in the browser to the database, and back.
-              </h2>
-              <p className="mt-5 text-lg leading-8 text-[#58718c]">
-                When I started, the hardest question for me was simple: how does
-                one click actually reach the server? LedgerLite answers it
-                visually. Every request passes through four layers, and each
-                layer has one clear job.
-              </p>
-              <p className="mt-4 leading-7 text-[#58718c]">
-                Inside the app you can watch this live: the request animation
-                shows the real steps and timings of each call, read from the
-                server&apos;s own trace.
-              </p>
+          <div className="mt-20">
+            <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
+              <div>
+                <p className="inline-flex rounded-md bg-[#ffe3eb] px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-[#a3234c]">
+                  How a request travels
+                </p>
+                <h2 className="mt-4 text-3xl font-black tracking-[-0.04em] text-[#082d63] sm:text-4xl">
+                  From a click in the browser to the database, and back.
+                </h2>
+                <p className="mt-4 text-lg leading-8 text-[#58718c]">
+                  When I started, the hardest question for me was simple: how
+                  does one click actually reach the server? LedgerLite answers it
+                  visually. Every request passes through four layers, each with
+                  one clear job, and inside the app the request animation shows
+                  the real steps and timings of every call.
+                </p>
+              </div>
 
-              <div className="mt-8 grid gap-3 sm:grid-cols-2">
-                <div className="rounded-2xl border-2 border-[#83cff4] bg-white p-5">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-2xl border-2 border-[#83cff4] bg-white p-4">
                   <p className="text-xs font-black uppercase tracking-[0.18em] text-[#1267c9]">
                     For beginners
                   </p>
                   <p className="mt-2 text-sm leading-6 text-[#58718c]">
-                    See the full path of a request: client, server, API and
-                    database, and why each step exists.
+                    The full path of a request, client to database, and why each
+                    step exists.
                   </p>
                 </div>
-                <div className="rounded-2xl border-2 border-[#83cff4] bg-white p-5">
+                <div className="rounded-2xl border-2 border-[#83cff4] bg-white p-4">
                   <p className="text-xs font-black uppercase tracking-[0.18em] text-[#159447]">
                     For seniors
                   </p>
                   <p className="mt-2 text-sm leading-6 text-[#58718c]">
-                    BFF auth with HttpOnly cookies, refresh rotation, tenant
-                    isolation and cache invalidation in one real codebase.
+                    BFF auth, refresh rotation, tenant isolation and cache
+                    invalidation in one real codebase.
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-4xl border-2 border-[#082d63] bg-white p-5 shadow-[0_10px_0_rgba(8,45,99,0.12)] sm:p-7">
-              <ol className="grid grid-cols-2 gap-2 sm:grid-cols-4" aria-label="Layers">
+            <div className="mt-8 rounded-4xl border-2 border-[#082d63] bg-white p-5 shadow-[0_10px_0_rgba(8,45,99,0.12)] sm:p-7">
+              <ol className="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Layers">
                 {lanes.map((lane, index) => (
                   <li
                     key={lane.name}
-                    className="relative rounded-2xl px-3 py-3 text-white"
+                    className="relative rounded-2xl px-4 py-3 text-white"
                     style={{ backgroundColor: lane.color }}
                   >
                     <p className="text-[10px] font-black uppercase tracking-[0.16em] opacity-80">
                       Layer {index + 1}
                     </p>
-                    <p className="mt-1 text-sm font-black">{lane.name}</p>
-                    <p className="text-[11px] opacity-90">{lane.tech}</p>
+                    <p className="mt-1 font-black">{lane.name}</p>
+                    <p className="text-xs opacity-90">{lane.tech}</p>
+                    {index < lanes.length - 1 && (
+                      <span
+                        aria-hidden
+                        className="absolute -right-3 top-1/2 z-10 hidden size-6 -translate-y-1/2 place-items-center rounded-full bg-white text-sm font-black text-[#082d63] shadow lg:grid"
+                      >
+                        →
+                      </span>
+                    )}
                   </li>
                 ))}
               </ol>
 
-              <ol className="relative mt-6 space-y-4 before:absolute before:bottom-4 before:left-[19px] before:top-4 before:w-0.5 before:bg-[#d7e6f3]">
+              <ol className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {journey.map((step, index) => {
                   const lane = lanes[step.lane];
                   return (
-                    <li key={step.title} className="relative flex gap-4">
-                      <span
-                        className="z-10 grid size-10 shrink-0 place-items-center rounded-full text-sm font-black text-white ring-4 ring-white"
-                        style={{ backgroundColor: lane.color }}
-                      >
-                        {index + 1}
-                      </span>
-                      <div className="pb-1">
-                        <p className="text-[11px] font-black uppercase tracking-[0.16em]" style={{ color: lane.color }}>
-                          {lane.name}
-                        </p>
-                        <p className="font-black text-[#082d63]">{step.title}</p>
-                        <p className="mt-1 text-sm leading-6 text-[#58718c]">{step.text}</p>
-                        <p className="mt-2 inline-flex rounded-md bg-[#f0f6fc] px-2 py-0.5 text-[11px] font-bold text-[#0b2e59]">
-                          {step.concept}
-                        </p>
+                    <li
+                      key={step.title}
+                      className="rounded-2xl border-t-4 bg-[#f7fbff] p-4"
+                      style={{ borderColor: lane.color }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span
+                          className="grid size-8 shrink-0 place-items-center rounded-full text-sm font-black text-white"
+                          style={{ backgroundColor: lane.color }}
+                        >
+                          {index + 1}
+                        </span>
+                        <div>
+                          <p className="text-[10px] font-black uppercase tracking-[0.16em]" style={{ color: lane.color }}>
+                            {lane.name}
+                          </p>
+                          <p className="font-black leading-tight text-[#082d63]">{step.title}</p>
+                        </div>
                       </div>
+                      <p className="mt-3 text-sm leading-6 text-[#58718c]">{step.text}</p>
+                      <p className="mt-2 inline-flex rounded-md bg-white px-2 py-0.5 text-[11px] font-bold text-[#0b2e59]">
+                        {step.concept}
+                      </p>
                     </li>
                   );
                 })}
