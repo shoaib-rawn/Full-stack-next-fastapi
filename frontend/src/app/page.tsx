@@ -144,8 +144,9 @@ export default function Home() {
               I am very thankful to you.
             </h2>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-[#58718c]">
-              My heartfelt thanks to the Ministry of IT &amp; Telecom and the
-              Pakistan Software Export Board (PSEB) for this internship. Building
+              My heartfelt thanks to the Ministry of IT &amp; Telecom, the
+              Pakistan Software Export Board (PSEB) and COMSTECH for this
+              internship. Building
               LedgerLite taught me 47 topics across the full stack, from FastAPI,
               PostgreSQL and secure authentication to Next.js, React and
               deployment. Thank you for the guidance, the opportunity and the
@@ -154,7 +155,7 @@ export default function Home() {
             <p className="mt-4 max-w-2xl text-lg leading-8 text-[#58718c]">
               The learning continues: I am now building new skills in AI and
               Machine Learning through{" "}
-              <strong className="font-black text-[#082d63]">
+              <strong className="rounded bg-[#ffd65a] px-1 font-black text-[#082d63]">
                 PSEB&apos;s three-month bootcamp
               </strong>
               . PSEB has
