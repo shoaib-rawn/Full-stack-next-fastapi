@@ -29,3 +29,4 @@ frontend/.next/
 .neon
 node_modules/
 .env.local
+/.vercel-backend-stage/
