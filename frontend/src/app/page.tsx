@@ -41,17 +41,26 @@ export default function Home() {
         <div className="pointer-events-none absolute -right-36 -top-44 -z-10 size-136 rounded-full bg-[#69ccf5]/30 blur-3xl" />
         <div className="pointer-events-none absolute -left-44 top-72 -z-10 size-96 rounded-full bg-[#ffd65a]/20 blur-3xl" />
 
-        <div className="mx-auto mb-4 flex max-w-6xl justify-center sm:justify-start">
-          <div className="rounded-2xl bg-white px-4 py-2 shadow-lg">
-            <Image
-              src="/logos/pseb-moitt-logos.png"
-              alt="PSEB and Ministry of Information Technology, Government of Pakistan logos"
-              width={238}
-              height={90}
-              className="h-14 w-auto sm:h-16"
-              priority
-            />
-          </div>
+        <div className="mx-auto mb-4 flex max-w-6xl items-center justify-between gap-4 rounded-2xl bg-white px-4 py-2 shadow-[0_8px_24px_rgba(4,30,68,0.25)] sm:px-6">
+          <Image
+            src="/logos/pseb-logo.png"
+            alt="Pakistan Software Export Board (PSEB) logo"
+            width={173}
+            height={102}
+            className="h-10 w-auto sm:h-12"
+            priority
+          />
+          <p className="hidden text-center text-[11px] font-bold uppercase tracking-[0.2em] text-[#58718c] md:block">
+            Internship project · Government of Pakistan
+          </p>
+          <Image
+            src="/logos/moitt-logo.png"
+            alt="Ministry of Information Technology & Telecom, Government of Pakistan logo"
+            width={164}
+            height={136}
+            className="h-12 w-auto sm:h-14"
+            priority
+          />
         </div>
 
         <nav className="mx-auto flex max-w-6xl items-center justify-between rounded-2xl border border-white/25 bg-white/10 px-4 py-3 shadow-xl backdrop-blur sm:px-5">
