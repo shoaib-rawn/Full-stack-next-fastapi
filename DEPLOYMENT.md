@@ -6,7 +6,7 @@ PostgreSQL data and Redis rate-limit state have different runtime needs.
 | Part | Provider | Production variable |
 | --- | --- | --- |
 | Next.js frontend | Vercel Hobby | `API_URL` |
-| FastAPI backend | Render Free Web Service | backend variables below |
+| FastAPI backend | Vercel Python runtime | backend variables below |
 | PostgreSQL | Neon Free | `DATABASE_URL` |
 | Redis | Upstash Redis Free | `REDIS_URL` |
 
@@ -14,8 +14,8 @@ PostgreSQL data and Redis rate-limit state have different runtime needs.
 
 1. Create a Neon project named `ledgerlite`.
 2. Copy its pooled connection string.
-3. Keep the pooled value for Render's `DATABASE_URL`.
-4. Keep the direct value for Render's `DATABASE_URL_UNPOOLED` so Alembic does
+3. Keep the pooled value for the backend's `DATABASE_URL`.
+4. Keep the direct value for `DATABASE_URL_UNPOOLED` so Alembic does
    not run through transaction pooling. The application normalizes both URLs
    for asyncpg. Never commit either value.
 
@@ -23,31 +23,30 @@ PostgreSQL data and Redis rate-limit state have different runtime needs.
 
 1. Create one Redis database in a nearby region.
 2. Open the database's Connect page and copy the TLS Redis URL.
-3. The value normally begins with `rediss://`; keep it for Render's
+3. The value normally begins with `rediss://`; keep it for Vercel's
    `REDIS_URL`. Never commit it.
 
-## 3. Deploy FastAPI on Render
+## 3. Deploy FastAPI on Vercel
 
-1. Push this repository to GitHub.
-2. In Render choose **New > Blueprint** and select the repository. The root
-   `render.yaml` creates `ledgerlite-api`.
-3. Enter `DATABASE_URL`, `DATABASE_URL_UNPOOLED`, and `REDIS_URL`. The Blueprint
-   already allows the deployed Vercel domain through `CORS_ORIGINS`.
-4. Render generates `JWT_SECRET_KEY`. Do not copy it into Git.
-5. The start command applies Alembic migrations before Uvicorn starts.
-6. Verify both URLs:
-   - `https://YOUR-API.onrender.com/health`
-   - `https://YOUR-API.onrender.com/health/ready`
-
-The free Render process sleeps after idle time, so its first request can be
-slow. That is a hosting limit, not an application error.
+1. Create a separate Vercel project named `ledgerlite-api` with `backend` as
+   its source root. Vercel detects `app/main.py` as FastAPI.
+2. Add `DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `REDIS_URL`, and a strong
+   `JWT_SECRET_KEY` as production secrets.
+3. Add `ENVIRONMENT=production` and
+   `CORS_ORIGINS=["https://frontend-dun-nine-f6zfeizlan.vercel.app"]`.
+4. Apply Alembic migrations separately before deploying. Serverless startup
+   must not run schema migrations for every function instance.
+5. Disable Vercel Authentication for the API production deployment. LedgerLite
+   still protects business endpoints with JWT, RBAC, and tenant scoping.
+6. Verify:
+   - `https://ledgerlite-api-tau.vercel.app/health`
+   - `https://ledgerlite-api-tau.vercel.app/health/ready`
 
 ## 4. Deploy Next.js on Vercel
 
 1. Import the same GitHub repository in Vercel.
 2. Set **Root Directory** to `frontend`.
-3. Add `API_URL=https://YOUR-API.onrender.com` after Render gives you the
-   backend URL.
+3. Add `API_URL=https://ledgerlite-api-tau.vercel.app`.
 4. Add `NEXT_PUBLIC_LEARNING_MODE=false`.
 5. Deploy and copy the final `https://...vercel.app` URL.
 
@@ -88,4 +87,4 @@ boundary and supports the public health display.
 
 `.github/workflows/ci.yml` runs backend migrations/tests and
 frontend typecheck, ESLint and production build on relevant pushes and pull
-requests. Vercel and Render should deploy only after the GitHub checks pass.
+requests. Production deployments should follow successful GitHub checks.
