@@ -63,8 +63,8 @@ export function DashboardOverview({ fullName, email, role }: DashboardOverviewPr
 
       {summary.isPending && (
         <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-[0.9fr_1.1fr]">
-          <div className="h-72 animate-pulse rounded-3xl bg-[#e5eef4]" />
-          <div className="h-72 animate-pulse rounded-3xl bg-[#e5eef4]" />
+          <div className="h-72 rounded-3xl border-2 border-[#72c8f1] bg-white" />
+          <div className="h-72 rounded-3xl border-2 border-[#f1c75b] bg-[#fffdf4]" />
         </div>
       )}
 
@@ -135,8 +135,8 @@ export function DashboardOverview({ fullName, email, role }: DashboardOverviewPr
         <div className="p-5 sm:p-6">
           {customers.isPending && (
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="h-20 animate-pulse rounded-2xl bg-[#e5eef4]" />
-              <div className="h-20 animate-pulse rounded-2xl bg-[#e5eef4]" />
+              <div className="h-20 rounded-2xl border-2 border-[#c9e6f4] bg-[#f7fcff]" />
+              <div className="h-20 rounded-2xl border-2 border-[#c9e6f4] bg-[#f7fcff]" />
             </div>
           )}
           {customers.isError && <p className="rounded-xl bg-[#ffe3eb] p-4 font-bold text-[#a3234c]">Could not load recent customers.</p>}
@@ -174,7 +174,10 @@ function DemoZone({
 }) {
   const queryClient = useQueryClient();
   const [playing, setPlaying] = useState(false);
-  const busy = useRef(false);
+  // Once per page load: after the first play the section stays as it is
+  // until the page is refreshed.
+  const [played, setPlayed] = useState(false);
+  const started = useRef(false);
   const mounted = useRef(true);
   // When a tap starts the animation, that same tap should not also follow a
   // link inside the section (the Customers card is a link).
@@ -188,8 +191,8 @@ function DemoZone({
   }, []);
 
   function play(byTouch = false) {
-    if (busy.current) return;
-    busy.current = true;
+    if (started.current) return;
+    started.current = true;
     if (byTouch) tapStartedAt.current = Date.now();
     setPlaying(true);
     void queryClient
@@ -198,18 +201,18 @@ function DemoZone({
       // Short pause so the finished flow can be seen before it closes.
       .then(() => new Promise((resolve) => setTimeout(resolve, 900)))
       .finally(() => {
-        if (mounted.current) setPlaying(false);
-        // A small cool-down stops it replaying the moment it closes.
-        setTimeout(() => {
-          busy.current = false;
-        }, 1500);
+        if (!mounted.current) return;
+        setPlaying(false);
+        setPlayed(true);
       });
   }
 
   return (
     <div
       className={`relative ${className}`}
-      onPointerEnter={(event) => {
+      // pointermove (not pointerenter) so a cursor that is already resting on
+      // the page when it loads does not start the animation by itself.
+      onPointerMove={(event) => {
         if (event.pointerType === "mouse") play();
       }}
       onTouchStart={() => play(true)}
@@ -221,15 +224,17 @@ function DemoZone({
         }
       }}
     >
-      <p className="mb-2 flex justify-end text-[11px] font-black uppercase tracking-wider text-[#7b93ab]">
-        <span className="rounded-full bg-white px-2.5 py-1 shadow-[0_2px_0_rgba(8,45,99,0.06)] ring-1 ring-[#d9edf7]">
-          ▶ <span className="[@media(hover:none)]:hidden">Hover</span>
-          <span className="hidden [@media(hover:none)]:inline">Tap</span> to watch this request
-        </span>
-      </p>
+      {!played && (
+        <p className="mb-2 flex justify-end text-[11px] font-black uppercase tracking-wider text-[#7b93ab]">
+          <span className="rounded-full bg-white px-2.5 py-1 shadow-[0_2px_0_rgba(8,45,99,0.06)] ring-1 ring-[#d9edf7]">
+            ▶ <span className="[@media(hover:none)]:hidden">Hover</span>
+            <span className="hidden [@media(hover:none)]:inline">Tap</span> to watch this request
+          </span>
+        </p>
+      )}
       <div className={playing ? "min-h-[26rem] sm:min-h-[22rem]" : undefined}>{children}</div>
       {playing && (
-        <div className="absolute inset-x-0 bottom-0 top-8 z-10 overflow-y-auto rounded-3xl bg-[#f5faff]/80 p-2 backdrop-blur-sm sm:p-4">
+        <div className="absolute inset-x-0 bottom-0 top-8 z-10 overflow-y-auto rounded-3xl bg-[#f5faff] p-2 sm:p-4">
           <RequestAnimation flow={flow} />
         </div>
       )}
