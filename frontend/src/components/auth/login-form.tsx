@@ -25,6 +25,9 @@ export function LoginForm() {
   });
 
   const [serverError, setServerError] = useState("");
+  // Set once login succeeds and never reset: the overlay then stays up until
+  // this page unmounts, so /login never flashes before the dashboard shows.
+  const [isOpeningDashboard, setIsOpeningDashboard] = useState(false);
   // Remove credentials from a URL produced by an older/default GET form
   // submission. New submissions use POST even before React hydrates.
   useEffect(() => {
@@ -48,8 +51,10 @@ export function LoginForm() {
       queryClient.clear();
       localStorage.removeItem("ledgerlite:last-activity");
 
+      setIsOpeningDashboard(true);
+      // A single navigation. The old extra router.refresh() re-rendered
+      // /login at the same time and delayed the switch.
       router.replace("/dashboard");
-      router.refresh();
     } catch (error) {
       setServerError(
         error instanceof Error ? error.message : "Could not log in.",
@@ -114,13 +119,13 @@ export function LoginForm() {
 
       <button
         type="submit"
-        disabled={isSubmitting}
+        disabled={isSubmitting || isOpeningDashboard}
         className="w-full rounded-xl bg-[#1267c9] px-4 py-3 font-black text-white shadow-[0_4px_0_#082d63] transition hover:-translate-y-0.5 active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {isSubmitting ? "Signing in..." : "Sign in"}
+        {isOpeningDashboard ? "Opening dashboard..." : isSubmitting ? "Signing in..." : "Sign in"}
       </button>
 
-      <RequestOverlay flow="login" active={isSubmitting} error={serverError} />
+      <RequestOverlay flow="login" active={isSubmitting || isOpeningDashboard} error={serverError} />
     </form>
   );
 }
