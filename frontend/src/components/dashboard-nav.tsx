@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -138,12 +138,15 @@ export type NavUser = {
 function NavSections({
   isOwner,
   onNavigate,
+  compact = false,
 }: {
   isOwner: boolean;
   onNavigate?: () => void;
+  // Phone menu: two columns and tighter spacing so everything fits on screen.
+  compact?: boolean;
 }) {
   return (
-    <div className="space-y-6">
+    <div className={compact ? "space-y-3" : "space-y-6"}>
       {sections.map((section) => {
         const items = section.items.filter((item) => !item.ownerOnly || isOwner);
         if (!items.length) return null;
@@ -153,7 +156,7 @@ function NavSections({
             <p className="px-3 text-[11px] font-black uppercase tracking-[0.18em] text-[#6f93bb]">
               {section.title}
             </p>
-            <div className="mt-2 grid gap-1">
+            <div className={compact ? "mt-1 grid grid-cols-2 gap-1" : "mt-2 grid gap-1"}>
               {items.map((item) => (
                 <NavLink key={item.href} {...item} onClick={onNavigate} />
               ))}
@@ -257,6 +260,22 @@ export function DashboardNav({
 }) {
   const [isOpen, setIsOpen] = useState(false);
 
+  // While the phone menu is open, keep the page behind it still and let
+  // Escape close it.
+  useEffect(() => {
+    if (!isOpen) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = previous;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [isOpen]);
+
   return (
     <>
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-white/10 bg-linear-to-b from-[#062a5c] via-[#073979] to-[#05224a] px-5 py-6 lg:flex">
@@ -290,10 +309,10 @@ export function DashboardNav({
           <nav
             id="dashboard-mobile-menu"
             aria-label="Main"
-            className="absolute inset-x-0 top-full max-h-[calc(100vh-72px)] overflow-y-auto border-b-4 border-[#ffd65a] bg-[#073979] px-5 pb-5 pt-4 shadow-lg"
+            className="absolute inset-x-0 top-full max-h-[calc(100dvh-72px)] overflow-y-auto overscroll-contain border-b-4 border-[#ffd65a] bg-[#073979] px-4 pb-4 pt-3 shadow-lg sm:px-5 sm:pb-5 sm:pt-4"
           >
-            <NavSections isOwner={isOwner} onNavigate={() => setIsOpen(false)} />
-            <div className="mt-6">
+            <NavSections isOwner={isOwner} onNavigate={() => setIsOpen(false)} compact />
+            <div className="mt-4">
               <UserCard user={user} />
             </div>
           </nav>
