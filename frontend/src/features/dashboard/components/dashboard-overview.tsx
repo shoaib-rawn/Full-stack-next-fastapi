@@ -1,13 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useQueryClient, type QueryKey } from "@tanstack/react-query";
 
 import { ConceptStep, MiniFetch, MiniOneQuery, MiniSession } from "@/components/concept-visuals";
 import { RequestAnimation } from "@/components/request-animation";
-import { useCustomers } from "@/features/customers/hooks";
+import { customerKeys, useCustomers } from "@/features/customers/hooks";
+import { getCustomers } from "@/features/customers/api";
+import { withMinDuration } from "@/lib/demo-delay";
 import { formatMoney } from "@/lib/money";
 
-import { useDashboardSummary } from "../hooks";
+import { dashboardKeys, fetchDashboardSummaryDemo, useDashboardSummary } from "../hooks";
 import { InvoiceStatusChart } from "./invoice-status-chart";
 
 type DashboardOverviewProps = {
@@ -18,7 +22,7 @@ type DashboardOverviewProps = {
 
 export function DashboardOverview({ fullName, email, role }: DashboardOverviewProps) {
   const summary = useDashboardSummary();
-  const customers = useCustomers(1, 5);
+  const customers = useCustomers(1, 5, { animate: false });
   const outstandingCount = summary.data
     ? summary.data.issued_invoices + summary.data.partially_paid_invoices
     : 0;
@@ -45,13 +49,24 @@ export function DashboardOverview({ fullName, email, role }: DashboardOverviewPr
         </div>
       </section>
 
-      <section className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <MetricCard number="01" label="Total customers" value={summary.isFetching ? "..." : String(summary.data?.total_customers ?? 0)} tone="blue" />
-        <MetricCard number="02" label="Total invoices" value={summary.isFetching ? "..." : String(summary.data?.total_invoices ?? 0)} tone="pink" />
-        <MetricCard number="03" label="Invoices outstanding" value={summary.isFetching ? "..." : String(outstandingCount)} tone="green" />
+      <DemoZone
+        flow="reports"
+        queryKey={dashboardKeys.all}
+        fetcher={fetchDashboardSummaryDemo}
+        className="mt-6"
+      >
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <MetricCard number="01" label="Total customers" value={summary.isPending ? "..." : String(summary.data?.total_customers ?? 0)} tone="blue" />
+        <MetricCard number="02" label="Total invoices" value={summary.isPending ? "..." : String(summary.data?.total_invoices ?? 0)} tone="pink" />
+        <MetricCard number="03" label="Invoices outstanding" value={summary.isPending ? "..." : String(outstandingCount)} tone="green" />
       </section>
 
-      {summary.isFetching && <div className="mt-6"><RequestAnimation flow="reports" /></div>}
+      {summary.isPending && (
+        <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-[0.9fr_1.1fr]">
+          <div className="h-72 animate-pulse rounded-3xl bg-[#e5eef4]" />
+          <div className="h-72 animate-pulse rounded-3xl bg-[#e5eef4]" />
+        </div>
+      )}
 
       {summary.isError && (
         <section className="mt-6 rounded-3xl border-2 border-[#f1a8bc] bg-[#ffe3eb] p-6 text-center">
@@ -60,7 +75,7 @@ export function DashboardOverview({ fullName, email, role }: DashboardOverviewPr
         </section>
       )}
 
-      {summary.data && !summary.isFetching && (
+      {summary.data && (
         <section className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-[0.9fr_1.1fr] [&>*]:min-w-0">
           <article className="rounded-3xl border-2 border-[#72c8f1] bg-white p-4 shadow-[0_8px_0_rgba(8,45,99,0.07)] sm:p-6">
             <span className="rounded-md bg-[#ccecff] px-2 py-1 text-xs font-black text-[#0759a8]">INVOICE LIFECYCLE</span>
@@ -96,11 +111,18 @@ export function DashboardOverview({ fullName, email, role }: DashboardOverviewPr
           </article>
         </section>
       )}
+      </DemoZone>
 
+      <DemoZone
+        flow="customers"
+        queryKey={customerKeys.list(1, 5)}
+        fetcher={() => withMinDuration(getCustomers(1, 5))}
+        className="mt-6"
+      >
       <Link
         href="/customers"
         aria-label="Recent customers — open customer register"
-        className="group mt-6 block overflow-hidden rounded-3xl border-2 border-[#9bd884] bg-white shadow-[0_8px_0_rgba(8,45,99,0.07)] transition hover:-translate-y-0.5 hover:border-[#1267c9] hover:shadow-[0_12px_0_rgba(8,45,99,0.09)] focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-[#ffd65a]"
+        className="group block overflow-hidden rounded-3xl border-2 border-[#9bd884] bg-white shadow-[0_8px_0_rgba(8,45,99,0.07)] transition hover:-translate-y-0.5 hover:border-[#1267c9] hover:shadow-[0_12px_0_rgba(8,45,99,0.09)] focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-[#ffd65a]"
       >
         <div className="flex flex-wrap items-center justify-between gap-4 bg-[#e8f8dc] px-5 py-4 sm:px-6">
           <div>
@@ -111,11 +133,16 @@ export function DashboardOverview({ fullName, email, role }: DashboardOverviewPr
         </div>
 
         <div className="p-5 sm:p-6">
-          {customers.isFetching && <RequestAnimation flow="customers" />}
+          {customers.isPending && (
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="h-20 animate-pulse rounded-2xl bg-[#e5eef4]" />
+              <div className="h-20 animate-pulse rounded-2xl bg-[#e5eef4]" />
+            </div>
+          )}
           {customers.isError && <p className="rounded-xl bg-[#ffe3eb] p-4 font-bold text-[#a3234c]">Could not load recent customers.</p>}
-          {!customers.isFetching && customers.data?.items.length === 0 && <p className="rounded-xl border-2 border-dashed border-[#b9def0] p-7 text-center text-[#58718c]">No customers yet.</p>}
+          {customers.data?.items.length === 0 && <p className="rounded-xl border-2 border-dashed border-[#b9def0] p-7 text-center text-[#58718c]">No customers yet.</p>}
           <div className="grid gap-3 sm:grid-cols-2">
-            {!customers.isFetching && customers.data?.items.map((customer) => (
+            {customers.data?.items.map((customer) => (
               <div key={customer.id} className="rounded-2xl border-2 border-[#c9e6f4] bg-[#f7fcff] p-4">
                 <p className="font-black text-[#082d63]">{customer.display_name}</p>
                 <p className="mt-1 text-sm text-[#647d96]">{customer.email ?? "No email"}</p>
@@ -124,6 +151,88 @@ export function DashboardOverview({ fullName, email, role }: DashboardOverviewPr
           </div>
         </div>
       </Link>
+      </DemoZone>
+    </div>
+  );
+}
+
+// Replays a section's real request with its animation, only when the user asks:
+// hovering with a mouse, or touching the section on a phone. The data already
+// on screen stays put underneath.
+function DemoZone({
+  flow,
+  queryKey,
+  fetcher,
+  className = "",
+  children,
+}: {
+  flow: "reports" | "customers";
+  queryKey: QueryKey;
+  fetcher: () => Promise<unknown>;
+  className?: string;
+  children: ReactNode;
+}) {
+  const queryClient = useQueryClient();
+  const [playing, setPlaying] = useState(false);
+  const busy = useRef(false);
+  const mounted = useRef(true);
+  // When a tap starts the animation, that same tap should not also follow a
+  // link inside the section (the Customers card is a link).
+  const tapStartedAt = useRef(0);
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
+
+  function play(byTouch = false) {
+    if (busy.current) return;
+    busy.current = true;
+    if (byTouch) tapStartedAt.current = Date.now();
+    setPlaying(true);
+    void queryClient
+      .fetchQuery({ queryKey, queryFn: fetcher, staleTime: 0 })
+      .catch(() => undefined)
+      // Short pause so the finished flow can be seen before it closes.
+      .then(() => new Promise((resolve) => setTimeout(resolve, 900)))
+      .finally(() => {
+        if (mounted.current) setPlaying(false);
+        // A small cool-down stops it replaying the moment it closes.
+        setTimeout(() => {
+          busy.current = false;
+        }, 1500);
+      });
+  }
+
+  return (
+    <div
+      className={`relative ${className}`}
+      onPointerEnter={(event) => {
+        if (event.pointerType === "mouse") play();
+      }}
+      onTouchStart={() => play(true)}
+      onClickCapture={(event) => {
+        if (Date.now() - tapStartedAt.current < 800) {
+          event.preventDefault();
+          event.stopPropagation();
+          tapStartedAt.current = 0;
+        }
+      }}
+    >
+      <p className="mb-2 flex justify-end text-[11px] font-black uppercase tracking-wider text-[#7b93ab]">
+        <span className="rounded-full bg-white px-2.5 py-1 shadow-[0_2px_0_rgba(8,45,99,0.06)] ring-1 ring-[#d9edf7]">
+          ▶ <span className="[@media(hover:none)]:hidden">Hover</span>
+          <span className="hidden [@media(hover:none)]:inline">Tap</span> to watch this request
+        </span>
+      </p>
+      <div className={playing ? "min-h-[26rem] sm:min-h-[22rem]" : undefined}>{children}</div>
+      {playing && (
+        <div className="absolute inset-x-0 bottom-0 top-8 z-10 overflow-y-auto rounded-3xl bg-[#f5faff]/80 p-2 backdrop-blur-sm sm:p-4">
+          <RequestAnimation flow={flow} />
+        </div>
+      )}
     </div>
   );
 }

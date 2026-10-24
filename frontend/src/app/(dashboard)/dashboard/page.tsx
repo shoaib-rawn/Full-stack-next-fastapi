@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 
 import { RequestAnimation } from "@/components/request-animation";
 import { DashboardOverview } from "@/features/dashboard/components/dashboard-overview";
-import { withMinDuration } from "@/lib/demo-delay";
 import { getCurrentUser } from "@/lib/server-auth";
 
 export default function DashboardPage() {
@@ -17,7 +16,9 @@ export default function DashboardPage() {
 }
 
 async function DashboardContent() {
-  const user = await withMinDuration(getCurrentUser());
+  // No demo delay here: the dashboard should open right away. Its request
+  // animations play when the user hovers or taps a section.
+  const user = await getCurrentUser();
 
   if (!user) {
     redirect("/login");
