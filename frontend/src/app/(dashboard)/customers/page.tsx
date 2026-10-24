@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 
 import { ConceptStep, MiniSync } from "@/components/concept-visuals";
-import { RequestAnimation } from "@/components/request-animation";
+import { QuietLoading } from "@/components/reveal-zone";
 import { CustomersList } from "@/features/customers/components/customers-list";
 import { CreateCustomerForm } from "@/features/customers/components/create-customer-form";
 import { getCurrentUser } from "@/lib/server-auth";
@@ -58,7 +58,7 @@ async function CustomersSection() {
 function CustomersFallback() {
   return (
     <div className="mt-8">
-      <RequestAnimation flow="customers" />
+      <QuietLoading />
     </div>
   );
 }

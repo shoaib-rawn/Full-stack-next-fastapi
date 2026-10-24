@@ -7,6 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { RequestOverlay } from "@/components/request-animation";
 import { withMinDuration } from "@/lib/demo-delay";
 import { trackedFetch } from "@/lib/request-tracker";
+import { clearSeen } from "@/lib/seen-sections";
 
 export function LogoutButton({ fullWidth = false }: { fullWidth?: boolean }) {
   const router = useRouter();
@@ -33,6 +34,7 @@ export function LogoutButton({ fullWidth = false }: { fullWidth?: boolean }) {
         );
       }
       queryClient.clear();
+      clearSeen();
       try {
         localStorage.removeItem("ledgerlite:last-activity");
       } catch {

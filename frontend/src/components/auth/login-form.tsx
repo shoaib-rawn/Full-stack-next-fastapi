@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { RequestOverlay } from "@/components/request-animation";
 import { login } from "@/lib/auth";
 import { withMinDuration } from "@/lib/demo-delay";
+import { clearSeen } from "@/lib/seen-sections";
 import {
   loginSchema,
   type LoginFormValues,
@@ -49,6 +50,7 @@ export function LoginForm() {
       await withMinDuration(login(values));
 
       queryClient.clear();
+      clearSeen();
       localStorage.removeItem("ledgerlite:last-activity");
 
       setIsOpeningDashboard(true);

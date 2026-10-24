@@ -7,10 +7,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 
 import { RequestAnimation, RequestOverlay } from "@/components/request-animation";
+import { RevealZone } from "@/components/reveal-zone";
+import { clearSeen } from "@/lib/seen-sections";
 import { withMinDuration } from "@/lib/demo-delay";
 import { trackedFetch } from "@/lib/request-tracker";
 
-import { useOrganization, useUpdateOrganization } from "../hooks";
+import { useOrganization, useUpdateOrganization, workspaceKeys } from "../hooks";
 import {
   organizationSchema,
   type OrganizationFormValues,
@@ -75,6 +77,7 @@ export function WorkspaceSettings({ isOwner }: { isOwner: boolean }) {
       } catch {
         // Storage may be blocked; server-side revocation still succeeded.
       }
+      clearSeen();
       router.replace("/login?reason=logout-all");
       router.refresh();
     } catch (error) {
@@ -87,12 +90,7 @@ export function WorkspaceSettings({ isOwner }: { isOwner: boolean }) {
   }
 
   if (organization.isPending) {
-    return (
-      <div className="space-y-4">
-        <RequestAnimation flow="organization" />
-        <SettingsSkeleton />
-      </div>
-    );
+    return <SettingsSkeleton />;
   }
 
   if (organization.isError || !organization.data) {
@@ -105,6 +103,7 @@ export function WorkspaceSettings({ isOwner }: { isOwner: boolean }) {
   }
 
   return (
+    <RevealZone id="settings-organization" flow="organization" queryKey={workspaceKeys.organization}>
     <div className="grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
       <form
         onSubmit={handleSubmit(onSubmit)}
@@ -194,6 +193,7 @@ export function WorkspaceSettings({ isOwner }: { isOwner: boolean }) {
         error={logoutAllError}
       />
     </div>
+    </RevealZone>
   );
 }
 
@@ -221,7 +221,7 @@ function Field({
 
 function SettingsSkeleton() {
   return (
-    <div className="grid animate-pulse gap-6 xl:grid-cols-[1.25fr_0.75fr]">
+    <div className="grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
       <div className="h-96 rounded-3xl bg-[#dcecf5]" />
       <div className="h-80 rounded-3xl bg-[#fff0b5]" />
     </div>

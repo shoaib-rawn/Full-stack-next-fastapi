@@ -4,10 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 
 import { RequestAnimation, RequestOverlay } from "@/components/request-animation";
+import { QuietLoading, RevealZone } from "@/components/reveal-zone";
 import { formatMoney } from "@/lib/money";
 import { PaymentPanel } from "@/features/payments/components/payment-panel";
 
-import { useCustomerOptions, useInvoice, useVoidInvoice } from "../hooks";
+import { invoiceKeys, useCustomerOptions, useInvoice, useVoidInvoice } from "../hooks";
 import type { Invoice } from "../types";
 import { InvoiceStatusBadge } from "./status-badge";
 
@@ -20,8 +21,8 @@ export function InvoiceDetail({ id, canVoid }: InvoiceDetailProps) {
   const invoiceQuery = useInvoice(id);
   const customers = useCustomerOptions();
 
-  if (invoiceQuery.isPending || invoiceQuery.isFetching) {
-    return <RequestAnimation flow="invoice" />;
+  if (invoiceQuery.isPending) {
+    return <QuietLoading />;
   }
 
   if (invoiceQuery.isError) {
@@ -39,11 +40,13 @@ export function InvoiceDetail({ id, canVoid }: InvoiceDetailProps) {
       ?.display_name ?? `Customer #${invoice.customer_id}`;
 
   return (
-    <InvoiceSummary
-      invoice={invoice}
-      customerName={customerName}
-      canVoid={canVoid}
-    />
+    <RevealZone id={`invoice-${id}`} flow="invoice" queryKey={invoiceKeys.detail(id)}>
+      <InvoiceSummary
+        invoice={invoice}
+        customerName={customerName}
+        canVoid={canVoid}
+      />
+    </RevealZone>
   );
 }
 

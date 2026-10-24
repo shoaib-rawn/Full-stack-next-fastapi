@@ -1,17 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, type ReactNode } from "react";
-import { useQueryClient, type QueryKey } from "@tanstack/react-query";
 
 import { ConceptStep, MiniFetch, MiniOneQuery, MiniSession } from "@/components/concept-visuals";
-import { RequestAnimation } from "@/components/request-animation";
+import { RevealZone } from "@/components/reveal-zone";
 import { customerKeys, useCustomers } from "@/features/customers/hooks";
-import { getCustomers } from "@/features/customers/api";
-import { withMinDuration } from "@/lib/demo-delay";
 import { formatMoney } from "@/lib/money";
 
-import { dashboardKeys, fetchDashboardSummaryDemo, useDashboardSummary } from "../hooks";
+import { dashboardKeys, useDashboardSummary } from "../hooks";
 import { InvoiceStatusChart } from "./invoice-status-chart";
 
 type DashboardOverviewProps = {
@@ -22,7 +18,7 @@ type DashboardOverviewProps = {
 
 export function DashboardOverview({ fullName, email, role }: DashboardOverviewProps) {
   const summary = useDashboardSummary();
-  const customers = useCustomers(1, 5, { animate: false });
+  const customers = useCustomers(1, 5);
   const outstandingCount = summary.data
     ? summary.data.issued_invoices + summary.data.partially_paid_invoices
     : 0;
@@ -49,12 +45,7 @@ export function DashboardOverview({ fullName, email, role }: DashboardOverviewPr
         </div>
       </section>
 
-      <DemoZone
-        flow="reports"
-        queryKey={dashboardKeys.all}
-        fetcher={fetchDashboardSummaryDemo}
-        className="mt-6"
-      >
+      <RevealZone id="dashboard-summary" flow="reports" queryKey={dashboardKeys.all} className="mt-6">
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <MetricCard number="01" label="Total customers" value={summary.isPending ? "..." : String(summary.data?.total_customers ?? 0)} tone="blue" />
         <MetricCard number="02" label="Total invoices" value={summary.isPending ? "..." : String(summary.data?.total_invoices ?? 0)} tone="pink" />
@@ -111,14 +102,9 @@ export function DashboardOverview({ fullName, email, role }: DashboardOverviewPr
           </article>
         </section>
       )}
-      </DemoZone>
+      </RevealZone>
 
-      <DemoZone
-        flow="customers"
-        queryKey={customerKeys.list(1, 5)}
-        fetcher={() => withMinDuration(getCustomers(1, 5))}
-        className="mt-6"
-      >
+      <RevealZone id="dashboard-customers" flow="customers" queryKey={customerKeys.list(1, 5)} className="mt-6">
       <Link
         href="/customers"
         aria-label="Recent customers — open customer register"
@@ -151,100 +137,7 @@ export function DashboardOverview({ fullName, email, role }: DashboardOverviewPr
           </div>
         </div>
       </Link>
-      </DemoZone>
-    </div>
-  );
-}
-
-// Replays a section's real request with its animation, only when the user asks:
-// hovering with a mouse, or touching the section on a phone. The data already
-// on screen stays put underneath.
-function DemoZone({
-  flow,
-  queryKey,
-  fetcher,
-  className = "",
-  children,
-}: {
-  flow: "reports" | "customers";
-  queryKey: QueryKey;
-  fetcher: () => Promise<unknown>;
-  className?: string;
-  children: ReactNode;
-}) {
-  const queryClient = useQueryClient();
-  const [playing, setPlaying] = useState(false);
-  // Once per page load: after the first play the section stays as it is
-  // until the page is refreshed.
-  const [played, setPlayed] = useState(false);
-  const started = useRef(false);
-  const mounted = useRef(true);
-  // When a tap starts the animation, that same tap should not also follow a
-  // link inside the section (the Customers card is a link).
-  const tapStartedAt = useRef(0);
-
-  useEffect(() => {
-    mounted.current = true;
-    return () => {
-      mounted.current = false;
-    };
-  }, []);
-
-  function play(byTouch = false) {
-    if (started.current) return;
-    started.current = true;
-    if (byTouch) tapStartedAt.current = Date.now();
-    setPlaying(true);
-    void queryClient
-      .fetchQuery({ queryKey, queryFn: fetcher, staleTime: 0 })
-      .catch(() => undefined)
-      // Short pause so the finished flow can be seen before it closes.
-      .then(() => new Promise((resolve) => setTimeout(resolve, 900)))
-      .finally(() => {
-        if (!mounted.current) return;
-        setPlaying(false);
-        setPlayed(true);
-      });
-  }
-
-  return (
-    <div
-      className={`relative ${className}`}
-      // pointermove (not pointerenter) so a cursor that is already resting on
-      // the page when it loads does not start the animation by itself.
-      onPointerMove={(event) => {
-        if (event.pointerType === "mouse") play();
-      }}
-      onTouchStart={() => play(true)}
-      onClickCapture={(event) => {
-        if (Date.now() - tapStartedAt.current < 800) {
-          event.preventDefault();
-          event.stopPropagation();
-          tapStartedAt.current = 0;
-        }
-      }}
-    >
-      {!played && (
-        <p className="mb-2 flex justify-end text-[11px] font-black uppercase tracking-wider text-[#7b93ab]">
-          <span className="rounded-full bg-white px-2.5 py-1 shadow-[0_2px_0_rgba(8,45,99,0.06)] ring-1 ring-[#d9edf7]">
-            ▶ <span className="[@media(hover:none)]:hidden">Hover</span>
-            <span className="hidden [@media(hover:none)]:inline">Tap</span> to watch this request
-          </span>
-        </p>
-      )}
-      {/* Smoky until its request has been watched once, then crisp for good. */}
-      <div
-        className={`transition-[filter,opacity] duration-700 ${
-          played ? "" : "pointer-events-none select-none opacity-60 blur-[3px] saturate-50"
-        } ${playing ? "min-h-[26rem] sm:min-h-[22rem]" : ""}`}
-      >
-        {children}
-      </div>
-      {playing && (
-        <div className="absolute inset-x-0 bottom-0 top-8 z-10 overflow-y-auto rounded-3xl bg-[#f5faff] p-2 sm:p-4">
-          <RequestAnimation flow={flow} />
-        </div>
-      )}
+      </RevealZone>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 
-import { RequestAnimation } from "@/components/request-animation";
+import { QuietLoading } from "@/components/reveal-zone";
 import { DashboardOverview } from "@/features/dashboard/components/dashboard-overview";
 import { getCurrentUser } from "@/lib/server-auth";
 
@@ -36,7 +36,7 @@ async function DashboardContent() {
 function DashboardFallback() {
   return (
     <section className="mx-auto max-w-3xl">
-      <RequestAnimation flow="session" />
+      <QuietLoading />
     </section>
   );
 }
