@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { LedgerLogo } from "@/components/ledger-logo";
 import Image from "next/image";
-import Link from "next/link";
+import { IntentLink } from "@/components/intent-link";
 
 import { ApiStatus } from "@/components/api-status";
 import { DailyAyah } from "@/components/daily-ayah";
@@ -76,12 +76,12 @@ export default function Home() {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
-            <Link
+            <IntentLink
               href="/notebook"
               className="flex shrink-0 items-center gap-1.5 rounded-full bg-[#ffd65a] px-3 py-1.5 text-[11px] font-black sm:py-2 sm:text-xs text-[#082d63] shadow-[0_3px_0_#be850b] transition hover:-translate-y-0.5"
             >
               <span aria-hidden>📓</span> Notebook
-            </Link>
+            </IntentLink>
             <Suspense fallback={<StatusFallback />}>
               <ApiStatus />
             </Suspense>
@@ -106,12 +106,12 @@ export default function Home() {
 
 
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="/login" className="rounded-xl bg-[#ffd65a] px-5 py-3 font-black text-[#082d63] shadow-[0_4px_0_#be850b]">
+              <IntentLink href="/login" className="rounded-xl bg-[#ffd65a] px-5 py-3 font-black text-[#082d63] shadow-[0_4px_0_#be850b]">
                 Sign in
-              </Link>
-              <Link href="/signup" className="rounded-xl border-2 border-white/60 bg-white/10 px-5 py-3 font-black text-white">
+              </IntentLink>
+              <IntentLink href="/signup" className="rounded-xl border-2 border-white/60 bg-white/10 px-5 py-3 font-black text-white">
                 Create workspace
-              </Link>
+              </IntentLink>
             </div>
           </div>
 

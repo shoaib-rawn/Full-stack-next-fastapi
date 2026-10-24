@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { IntentLink } from "@/components/intent-link";
 
 // Landing-page teaser for the request journey. It shows the four layers of
 // the stack but keeps what happens between them hidden: the real step-by-step
@@ -61,12 +61,12 @@ export function LandingRequestDemo() {
           <p className="mt-3 hidden leading-7 text-[#d7edff] sm:block">
             Sign in and watch a real request make the trip, step by step.
           </p>
-          <Link
+          <IntentLink
             href="/login"
             className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#ffd65a] px-5 py-3 font-black text-[#082d63] shadow-[0_4px_0_#be850b] transition hover:-translate-y-0.5"
           >
             Watch it live <span aria-hidden>→</span>
-          </Link>
+          </IntentLink>
         </div>
       </div>
     </div>

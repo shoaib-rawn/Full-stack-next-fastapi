@@ -6,7 +6,7 @@ import {
   QueryClientProvider,
 } from "@tanstack/react-query";
 
-import { ApiError } from "@/lib/http-client";
+import { ApiError } from "@/lib/api-error";
 
 type QueryProviderProps = {
   children: React.ReactNode;
