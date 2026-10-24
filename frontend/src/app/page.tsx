@@ -68,7 +68,7 @@ export default function Home() {
             <span className="grid size-10 shrink-0 place-items-center rounded-xl border-2 border-white/70 bg-white/10 text-sm font-black text-white">
               LL
             </span>
-            <div>
+            <div className="hidden min-[400px]:block">
               <p className="font-black tracking-[-0.02em]">LedgerLite</p>
               <p className="hidden text-xs text-[#cceaff] sm:block">Accounting workspace</p>
             </div>
@@ -77,7 +77,7 @@ export default function Home() {
           <div className="flex items-center gap-2 sm:gap-3">
             <Link
               href="/notebook"
-              className="flex items-center gap-1.5 rounded-full bg-[#ffd65a] px-3 py-2 text-xs font-black text-[#082d63] shadow-[0_3px_0_#be850b] transition hover:-translate-y-0.5"
+              className="flex shrink-0 items-center gap-1.5 rounded-full bg-[#ffd65a] px-3 py-1.5 text-[11px] font-black sm:py-2 sm:text-xs text-[#082d63] shadow-[0_3px_0_#be850b] transition hover:-translate-y-0.5"
             >
               <span aria-hidden>📓</span> Notebook
             </Link>
@@ -96,7 +96,7 @@ export default function Home() {
               Clear accounts.
               <span className="block text-[#ffd65a]">Calmer decisions.</span>
             </h1>
-            <p className="mt-7 max-w-2xl text-base leading-7 text-[#d7edff] sm:text-xl sm:leading-8">
+            <p className="mt-7 hidden max-w-2xl text-base leading-7 text-[#d7edff] sm:block sm:text-xl sm:leading-8">
               A multi-tenant workspace for customers, invoices, payments, and the
               complete story behind every balance.
             </p>
@@ -112,7 +112,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="rounded-4xl border-2 border-white/30 bg-white/10 p-4 text-white shadow-[0_14px_0_rgba(4,30,68,0.2)] backdrop-blur sm:p-8">
+          <div className="hidden rounded-4xl border-2 border-white/30 bg-white/10 p-4 text-white sm:block shadow-[0_14px_0_rgba(4,30,68,0.2)] backdrop-blur sm:p-8">
             <p className="text-xs font-black uppercase tracking-[0.22em] text-[#ffd65a]">
               Request journey
             </p>
@@ -143,7 +143,15 @@ export default function Home() {
             <h2 className="mt-4 text-3xl font-black tracking-[-0.045em] text-[#082d63] sm:text-5xl">
               I am very thankful to you.
             </h2>
-            <p className="mt-6 max-w-2xl text-base leading-7 text-[#58718c] sm:text-lg sm:leading-8">
+            <p className="mt-4 text-base leading-7 text-[#58718c] sm:hidden">
+              Heartfelt thanks to MoITT, PSEB and COMSTECH for this internship.
+              Now learning AI &amp; ML in{" "}
+              <strong className="whitespace-nowrap rounded bg-[#ffd65a] px-1 font-black text-[#082d63]">
+                PSEB&apos;s bootcamp
+              </strong>
+              .
+            </p>
+            <p className="mt-6 hidden max-w-2xl text-base leading-7 text-[#58718c] sm:block sm:text-lg sm:leading-8">
               My heartfelt thanks to the Ministry of IT &amp; Telecom, the
               Pakistan Software Export Board (PSEB) and COMSTECH for this
               internship. Building
@@ -152,7 +160,7 @@ export default function Home() {
               deployment. Thank you for the guidance, the opportunity and the
               trust that made this journey possible.
             </p>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-[#58718c] sm:text-lg sm:leading-8">
+            <p className="mt-4 hidden max-w-2xl text-base leading-7 text-[#58718c] sm:block sm:text-lg sm:leading-8">
               The learning continues: I am now building new skills in AI and
               Machine Learning through{" "}
               <strong className="whitespace-nowrap rounded bg-[#ffd65a] px-1 font-black text-[#082d63]">
@@ -178,18 +186,18 @@ export default function Home() {
             </h2>
           </div>
 
-          <ul className="mt-10 flex flex-wrap gap-3">
+          <ul className="mt-6 flex flex-wrap gap-2 sm:mt-10 sm:gap-3">
             {majorSkills.map((skill) => (
               <li
                 key={skill}
-                className="rounded-full border-2 border-[#83cff4] bg-white px-4 py-2 text-sm font-black text-[#082d63] shadow-[0_4px_0_rgba(8,45,99,0.07)] transition hover:-translate-y-0.5 hover:border-[#1267c9]"
+                className="rounded-full border-2 border-[#83cff4] bg-white px-3 py-1.5 text-xs font-black sm:px-4 sm:py-2 sm:text-sm text-[#082d63] shadow-[0_4px_0_rgba(8,45,99,0.07)] transition hover:-translate-y-0.5 hover:border-[#1267c9]"
               >
                 {skill}
               </li>
             ))}
           </ul>
 
-          <div className="mt-20">
+          <div className="mt-14 sm:mt-20">
             <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
               <div>
                 <p className="inline-flex rounded-md bg-[#ffe3eb] px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-[#a3234c]">
@@ -198,7 +206,7 @@ export default function Home() {
                 <h2 className="mt-4 text-3xl font-black tracking-[-0.04em] text-[#082d63] sm:text-4xl">
                   From a click in the browser to the database, and back.
                 </h2>
-                <p className="mt-4 text-lg leading-8 text-[#58718c]">
+                <p className="mt-4 hidden text-lg leading-8 text-[#58718c] sm:block">
                   When I started, the hardest question for me was simple: how
                   does one click actually reach the server? LedgerLite answers it
                   visually. Every request passes through four layers, each with
@@ -207,7 +215,7 @@ export default function Home() {
                 </p>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="hidden gap-3 sm:grid sm:grid-cols-2">
                 <div className="rounded-2xl border-2 border-[#83cff4] bg-white p-4">
                   <p className="text-xs font-black uppercase tracking-[0.18em] text-[#1267c9]">
                     For beginners

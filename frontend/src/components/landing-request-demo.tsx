@@ -25,7 +25,7 @@ export function LandingRequestDemo() {
       />
       <div aria-hidden className="pointer-events-none absolute -right-24 -top-24 size-80 rounded-full bg-[#69ccf5]/25 blur-3xl" />
 
-      <div className="relative grid gap-10 lg:grid-cols-[1.4fr_0.6fr] lg:items-center">
+      <div className="relative grid gap-6 sm:gap-10 lg:grid-cols-[1.4fr_0.6fr] lg:items-center">
         <ol className="flex items-center" aria-label="The four layers of LedgerLite">
           {layers.map((layer, index) => (
             <li key={layer.name} className={index === 0 ? "flex" : "flex flex-1 items-center"}>
@@ -55,10 +55,10 @@ export function LandingRequestDemo() {
           <p className="text-xs font-black uppercase tracking-[0.22em] text-[#ffd65a]">
             One click · four layers
           </p>
-          <p className="mt-3 text-2xl font-black leading-tight tracking-[-0.03em] sm:text-3xl">
+          <p className="mt-3 text-xl font-black leading-tight tracking-[-0.03em] sm:text-3xl">
             What happens between the click and the database?
           </p>
-          <p className="mt-3 leading-7 text-[#d7edff]">
+          <p className="mt-3 hidden leading-7 text-[#d7edff] sm:block">
             Sign in and watch a real request make the trip, step by step.
           </p>
           <Link

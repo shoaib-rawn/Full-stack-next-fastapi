@@ -45,10 +45,10 @@ export function TributeCard() {
           </p>
         </div>
         <p className="mt-6 text-3xl font-black tracking-[-0.03em]">Tribute to PSEB</p>
-        <p className="mt-3 leading-7 text-[#d7edff]">
+        <p className="mt-3 hidden leading-7 text-[#d7edff] sm:block">
           A small page of wishes and memories from my internship days.
         </p>
-        <span className="mt-8 inline-flex items-center gap-2 rounded-xl bg-[#ffd65a] px-5 py-3 font-black text-[#082d63] shadow-[0_4px_0_#be850b]">
+        <span className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#ffd65a] sm:mt-8 px-5 py-3 font-black text-[#082d63] shadow-[0_4px_0_#be850b]">
           Open tribute
           <span className="transition-transform group-hover:translate-x-1" aria-hidden>→</span>
         </span>
