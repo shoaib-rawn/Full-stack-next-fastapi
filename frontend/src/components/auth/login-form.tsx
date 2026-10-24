@@ -26,9 +26,28 @@ export function LoginForm() {
   });
 
   const [serverError, setServerError] = useState("");
-  // Set once login succeeds and never reset: the overlay then stays up until
-  // this page unmounts, so /login never flashes before the dashboard shows.
+  // Set once login succeeds: the overlay stays up until the dashboard is
+  // shown, so /login never flashes in between.
   const [isOpeningDashboard, setIsOpeningDashboard] = useState(false);
+
+  // Next.js keeps a page you left alive in the background (hidden) and shows
+  // it again with its old state when you come back. Without this reset, the
+  // login page came back after logout still "opening the dashboard", with
+  // the finished overlay stuck on screen and the button disabled.
+  // Effect cleanups run when the page is hidden, so reset there.
+  useEffect(() => {
+    return () => setIsOpeningDashboard(false);
+  }, []);
+
+  // Safety net: if the dashboard has not replaced this page after a while
+  // (slow or failed navigation), do a full page load instead of waiting.
+  useEffect(() => {
+    if (!isOpeningDashboard) return;
+    // A full load is the point here, since the client-side navigation stalled.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+    const timer = setTimeout(() => window.location.assign("/dashboard"), 12000);
+    return () => clearTimeout(timer);
+  }, [isOpeningDashboard]);
   // Remove credentials from a URL produced by an older/default GET form
   // submission. New submissions use POST even before React hydrates.
   useEffect(() => {
