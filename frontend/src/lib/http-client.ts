@@ -91,6 +91,46 @@ function toApiError(error: AxiosError): ApiError {
   return new ApiError(error.message, status);
 }
 
+// The backend treats a refresh token used twice as stolen and ends every
+// session. So refresh at most once at a time: one shared promise inside this
+// tab, and a Web Lock across tabs. A tab that waited for the lock skips the
+// refresh when another tab has just done it (the cookies are shared).
+const LAST_REFRESH_KEY = "ledgerlite:last-refresh";
+const RECENT_REFRESH_MS = 15_000;
+let refreshInFlight: Promise<void> | null = null;
+
+function refreshedRecently() {
+  try {
+    const at = Number(localStorage.getItem(LAST_REFRESH_KEY) ?? 0);
+    return Date.now() - at < RECENT_REFRESH_MS;
+  } catch {
+    return false;
+  }
+}
+
+async function doRefresh() {
+  if (refreshedRecently()) return;
+  await axios.post("/api/auth/refresh");
+  try {
+    localStorage.setItem(LAST_REFRESH_KEY, String(Date.now()));
+  } catch {
+    // Storage blocked: only the cross-tab shortcut is lost.
+  }
+}
+
+export function refreshSession(): Promise<void> {
+  if (!refreshInFlight) {
+    const locks = typeof navigator !== "undefined" ? navigator.locks : undefined;
+    const run = locks
+      ? locks.request("ledgerlite-refresh", () => doRefresh()).then(() => undefined)
+      : doRefresh();
+    refreshInFlight = run.finally(() => {
+      refreshInFlight = null;
+    });
+  }
+  return refreshInFlight;
+}
+
 httpClient.interceptors.response.use(
   (response) => response,
 
@@ -113,7 +153,7 @@ httpClient.interceptors.response.use(
     originalRequest._retry = true;
 
     try {
-      await axios.post("/api/auth/refresh");
+      await refreshSession();
 
       return httpClient(originalRequest);
     } catch (refreshError) {

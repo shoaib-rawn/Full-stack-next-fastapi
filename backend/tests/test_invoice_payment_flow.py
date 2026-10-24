@@ -1,3 +1,4 @@
+import asyncio
 from uuid import uuid4
 
 import pytest
@@ -264,12 +265,58 @@ async def test_invoice_number_search_payment_and_reversal_flow() -> None:
                 "Bank transfer returned"
             )
 
-            voided = await client.post(
+            assert payment_list.json()["items"][0]["reversed_by_user_id"] is not None
+
+            void_without_reason = await client.post(
                 f"/invoices/{invoice_id}/void", headers=headers_a
+            )
+            assert void_without_reason.status_code == 422
+
+            voided = await client.post(
+                f"/invoices/{invoice_id}/void",
+                headers=headers_a,
+                json={"reason": "Issued to the wrong customer"},
             )
             assert voided.status_code == 200
             assert voided.json()["status"] == "void"
             assert voided.json()["balance_due"] == "0.00"
+            assert voided.json()["void_reason"] == "Issued to the wrong customer"
+            assert voided.json()["voided_at"] is not None
+            assert voided.json()["voided_by_user_id"] is not None
+
+            void_again = await client.post(
+                f"/invoices/{invoice_id}/void",
+                headers=headers_a,
+                json={"reason": "Second attempt"},
+            )
+            assert void_again.status_code == 409
+
+            # A void and a payment sent at the same moment: the invoice row
+            # lock lets only one win, so a void invoice never holds money.
+            race_id = second.json()["id"]
+            race_void, race_payment = await asyncio.gather(
+                client.post(
+                    f"/invoices/{race_id}/void",
+                    headers=headers_a,
+                    json={"reason": "Race check"},
+                ),
+                client.post(
+                    f"/invoices/{race_id}/payments",
+                    headers=headers_a,
+                    json={"amount": "10.00", "method": "cash"},
+                ),
+            )
+            assert sorted([race_void.status_code, race_payment.status_code]) in (
+                [200, 409],
+                [201, 409],
+            )
+            race_invoice = (
+                await client.get(f"/invoices/{race_id}", headers=headers_a)
+            ).json()
+            if race_invoice["status"] == "void":
+                assert race_invoice["amount_paid"] == "0.00"
+            else:
+                assert race_invoice["amount_paid"] == "10.00"
     finally:
         app.dependency_overrides.pop(get_redis_client, None)
         await remove_test_organizations()

@@ -23,6 +23,7 @@ from app.schemas.invoice import (
     InvoiceLineItemCreate,
     InvoiceResponse,
     InvoiceUpdate,
+    InvoiceVoidRequest,
 )
 from app.schemas.pagination import Page
 from app.services.accounting import AccountingError, calculate_invoice
@@ -38,6 +39,8 @@ async def get_invoice_or_404(
     invoice_id: int,
     organization_id: int,
     session: AsyncSession,
+    *,
+    lock: bool = False,
 ) -> Invoice:
     statement = (
         select(Invoice)
@@ -47,6 +50,10 @@ async def get_invoice_or_404(
         )
         .options(selectinload(Invoice.line_items))
     )
+    if lock:
+        # Same row lock that recording and reversing a payment take, so a
+        # payment can never land between our checks and our write.
+        statement = statement.with_for_update(of=Invoice)
     invoice = await session.scalar(statement)
 
     if invoice is None:
@@ -285,6 +292,7 @@ async def update_invoice(
         invoice_id=invoice_id,
         organization_id=current_user.organization_id,
         session=session,
+        lock=True,
     )
 
     if invoice.status != "issued" or invoice.amount_paid != 0:
@@ -374,12 +382,14 @@ async def update_invoice(
     response_model=InvoiceResponse,
     summary="Void an unpaid invoice",
     description=(
-        "Keeps the accounting record but closes its outstanding balance. "
+        "Keeps the accounting record but closes its outstanding balance, "
+        "and records who voided it, when and why. "
         "Invoices with payments must have those payments reversed first."
     ),
 )
 async def void_invoice(
     invoice_id: DbId,
+    payload: InvoiceVoidRequest,
     current_user: Annotated[
         User,
         Depends(get_current_owner),
@@ -393,6 +403,7 @@ async def void_invoice(
         invoice_id=invoice_id,
         organization_id=current_user.organization_id,
         session=session,
+        lock=True,
     )
 
     if invoice.status == "void":
@@ -408,6 +419,9 @@ async def void_invoice(
 
     invoice.status = "void"
     invoice.balance_due = 0
+    invoice.voided_at = datetime.now(timezone.utc)
+    invoice.voided_by_user_id = current_user.id
+    invoice.void_reason = payload.reason
     await session.commit()
     await session.refresh(invoice)
     await session.refresh(invoice, attribute_names=["line_items"])

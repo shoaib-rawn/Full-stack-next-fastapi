@@ -72,3 +72,8 @@ class Payment(TimestampMixin, Base):
         String(250),
         nullable=True,
     )
+
+    reversed_by_user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )

@@ -61,6 +61,8 @@ function InvoiceSummary({
 }) {
   const voidInvoice = useVoidInvoice(invoice.id);
   const [confirming, setConfirming] = useState(false);
+  const [voidReason, setVoidReason] = useState("");
+  const reasonValid = voidReason.trim().length >= 3;
 
   // Backend rule: only an issued invoice with no payments can be edited.
   const editable = invoice.status === "issued" && Number(invoice.amount_paid) === 0;
@@ -139,6 +141,20 @@ function InvoiceSummary({
         </dl>
       </div>
 
+      {invoice.status === "void" && (invoice.voided_at || invoice.void_reason) && (
+        <div className="mx-5 mb-4 rounded-2xl border-2 border-[#f2a8bd] bg-[#fff1f5] p-4 sm:mx-6">
+          <p className="text-xs font-black uppercase tracking-wider text-[#a3234c]">Void record</p>
+          {invoice.voided_at && (
+            <p className="mt-1 text-sm font-bold text-[#082d63]">
+              Voided on {new Date(invoice.voided_at).toLocaleString()}
+            </p>
+          )}
+          {invoice.void_reason && (
+            <p className="mt-1 text-sm text-[#58718c]">Reason: {invoice.void_reason}</p>
+          )}
+        </div>
+      )}
+
       <PaymentPanel invoice={invoice} isOwner={canVoid} />
 
       {voidInvoice.isError && (
@@ -167,13 +183,29 @@ function InvoiceSummary({
         {voidable &&
           (confirming ? (
             <>
+              <label className="w-full text-sm font-black text-[#163e6b]">
+                Why are you voiding this invoice?
+                <input
+                  type="text"
+                  value={voidReason}
+                  onChange={(event) => setVoidReason(event.target.value)}
+                  minLength={3}
+                  maxLength={250}
+                  required
+                  autoFocus
+                  placeholder="e.g. Issued to the wrong customer"
+                  className="mt-2 w-full rounded-xl border-2 border-[#b8dbea] bg-white px-4 py-3 font-normal text-[#0b2e59] outline-none focus:border-[#d7344f]"
+                />
+              </label>
               <button
                 type="button"
-                disabled={voidInvoice.isPending}
+                disabled={voidInvoice.isPending || !reasonValid}
                 onClick={() =>
-                  voidInvoice.mutate(undefined, { onSettled: () => setConfirming(false) })
+                  voidInvoice.mutate(voidReason.trim(), {
+                    onSettled: () => setConfirming(false),
+                  })
                 }
-                className="rounded-xl bg-[#d7344f] px-5 py-3 font-black text-white disabled:opacity-60"
+                className="rounded-xl bg-[#d7344f] px-5 py-3 font-black text-white disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {voidInvoice.isPending ? "Voiding..." : "Yes, void this invoice"}
               </button>

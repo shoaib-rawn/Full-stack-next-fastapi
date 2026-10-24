@@ -481,14 +481,17 @@ async def test_auth_tenant_isolation_and_refresh_reuse_protection() -> None:
             assert void_candidate.json()["invoice_number"].endswith("-0003")
             member_void_forbidden = await client.post(
                 f"/invoices/{void_candidate.json()['id']}/void",
+                json={"reason": "Member should not void"},
                 headers=member_headers,
             )
             voided_invoice = await client.post(
                 f"/invoices/{void_candidate.json()['id']}/void",
+                json={"reason": "Duplicate invoice"},
                 headers=headers_a,
             )
             repeat_void = await client.post(
                 f"/invoices/{void_candidate.json()['id']}/void",
+                json={"reason": "Duplicate invoice"},
                 headers=headers_a,
             )
             payment_on_void = await client.post(
@@ -530,6 +533,7 @@ async def test_auth_tenant_isolation_and_refresh_reuse_protection() -> None:
             )
             void_after_payment = await client.post(
                 f"/invoices/{invoice['id']}/void",
+                json={"reason": "Customer cancelled"},
                 headers=headers_a,
             )
             assert update_after_payment.status_code == 409

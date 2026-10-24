@@ -9,7 +9,7 @@ type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
-export async function POST(_request: NextRequest, context: RouteContext) {
+export async function POST(request: NextRequest, context: RouteContext) {
   const trace = new BffTrace();
   const cookieStore = await cookies();
   const token = cookieStore.get("access_token")?.value;
@@ -24,7 +24,10 @@ export async function POST(_request: NextRequest, context: RouteContext) {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
     },
+    // The backend requires a reason and records who voided it and when.
+    body: await request.text(),
     cache: "no-store",
   });
 
