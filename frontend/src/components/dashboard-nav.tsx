@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
+import { LedgerLogo } from "@/components/ledger-logo";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -171,9 +172,7 @@ function NavSections({
 function Brand() {
   return (
     <Link href="/dashboard" className="flex items-center gap-3">
-      <span className="grid size-10 place-items-center rounded-xl bg-[#ffd65a] text-sm font-black text-[#082d63] shadow-[0_3px_0_#be850b]">
-        LL
-      </span>
+      <LedgerLogo />
       <span>
         <span className="block text-lg font-black leading-5 text-white">LedgerLite</span>
         <span className="block text-[11px] font-bold uppercase tracking-[0.16em] text-[#7fa6cf]">

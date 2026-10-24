@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { LedgerLogo } from "@/components/ledger-logo";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -64,13 +65,11 @@ export default function Home() {
           />
         </div>
 
-        <nav className="mx-auto flex items-center justify-between gap-2 rounded-2xl border border-white/25 bg-white/10 px-3 py-3 shadow-xl backdrop-blur sm:px-5">
+        <nav className="mx-auto flex max-w-5xl items-center justify-between gap-2 rounded-2xl border border-white/25 bg-white/10 px-3 py-3 shadow-xl backdrop-blur sm:px-5">
           <div className="flex items-center gap-3">
-            <span className="grid size-10 shrink-0 place-items-center rounded-xl border-2 border-white/70 bg-white/10 text-sm font-black text-white">
-              LL
-            </span>
+            <LedgerLogo />
             <div className="hidden min-[400px]:block">
-              <p className="font-black tracking-[-0.02em]">LedgerLite</p>
+              <p className="text-lg font-black leading-5 tracking-[-0.02em]">LedgerLite</p>
               <p className="hidden text-xs text-[#cceaff] sm:block">Accounting workspace</p>
             </div>
           </div>
