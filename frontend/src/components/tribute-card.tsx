@@ -34,7 +34,7 @@ export function TributeCard() {
           setLoaded(false);
           setOpen(true);
         }}
-        className="group rounded-4xl border-2 border-[#082d63] bg-linear-to-br from-[#073979] via-[#0e61b8] to-[#082d63] p-8 text-left text-white shadow-[0_10px_0_#041a3a] transition hover:-translate-y-1 hover:shadow-[0_14px_0_#041a3a]"
+        className="group rounded-4xl border-2 border-[#082d63] bg-linear-to-br from-[#073979] via-[#0e61b8] to-[#082d63] p-6 text-left sm:p-8 text-white shadow-[0_10px_0_#041a3a] transition hover:-translate-y-1 hover:shadow-[0_14px_0_#041a3a]"
       >
         <div className="flex items-center gap-3">
           <span className="grid size-14 place-items-center rounded-2xl bg-white text-3xl" aria-hidden>
@@ -63,7 +63,7 @@ export function TributeCard() {
           onClick={() => setOpen(false)}
         >
           <div
-            className="flex h-full max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-3xl border-4 border-[#ffd65a] bg-white shadow-[0_24px_60px_rgba(4,26,58,0.55)]"
+            className="flex h-[88dvh] w-full max-w-6xl flex-col overflow-hidden rounded-3xl border-4 border-[#ffd65a] bg-white shadow-[0_24px_60px_rgba(4,26,58,0.55)]"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-center justify-between gap-3 bg-linear-to-r from-[#073979] via-[#0e61b8] to-[#082d63] px-4 py-3 text-white sm:px-6">
@@ -73,7 +73,7 @@ export function TributeCard() {
                 </span>
                 <div className="leading-tight">
                   <p className="font-black">Tribute to PSEB</p>
-                  <p className="text-xs text-[#cceaff]">Internship days · wishes and memories</p>
+                  <p className="hidden text-xs text-[#cceaff] sm:block">Internship days · wishes and memories</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -81,9 +81,10 @@ export function TributeCard() {
                   href={tributeUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hidden rounded-lg border border-white/40 px-3 py-1.5 text-xs font-bold text-white hover:bg-white/10 sm:inline-flex"
+                  className="inline-flex rounded-lg border border-white/40 px-2.5 py-1.5 text-xs font-bold text-white hover:bg-white/10 sm:px-3"
+                  aria-label="Open in new tab"
                 >
-                  Open in new tab ↗
+                  <span className="hidden sm:inline">Open in new tab&nbsp;</span>↗
                 </a>
                 <button
                   type="button"

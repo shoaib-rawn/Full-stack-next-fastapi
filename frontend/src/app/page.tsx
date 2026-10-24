@@ -63,14 +63,14 @@ export default function Home() {
           />
         </div>
 
-        <nav className="mx-auto flex items-center justify-between rounded-2xl border border-white/25 bg-white/10 px-4 py-3 shadow-xl backdrop-blur sm:px-5">
+        <nav className="mx-auto flex items-center justify-between gap-2 rounded-2xl border border-white/25 bg-white/10 px-3 py-3 shadow-xl backdrop-blur sm:px-5">
           <div className="flex items-center gap-3">
-            <span className="grid size-10 place-items-center rounded-xl border-2 border-white/70 bg-white/10 text-sm font-black text-white">
+            <span className="grid size-10 shrink-0 place-items-center rounded-xl border-2 border-white/70 bg-white/10 text-sm font-black text-white">
               LL
             </span>
             <div>
               <p className="font-black tracking-[-0.02em]">LedgerLite</p>
-              <p className="text-xs text-[#cceaff]">Accounting workspace</p>
+              <p className="hidden text-xs text-[#cceaff] sm:block">Accounting workspace</p>
             </div>
           </div>
 
@@ -87,16 +87,16 @@ export default function Home() {
           </div>
         </nav>
 
-        <div className="mx-auto grid gap-12 pb-4 pt-20 lg:grid-cols-[1.15fr_0.85fr] lg:items-end lg:pt-28">
+        <div className="mx-auto grid grid-cols-1 gap-12 pb-4 pt-12 sm:pt-20 lg:grid-cols-[1.15fr_0.85fr] [&>*]:min-w-0 lg:items-end lg:pt-28">
           <div>
             <p className="mb-5 inline-flex rounded-md bg-[#ffd65a] px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-[#082d63]">
               My LedgerLite Journey
             </p>
-            <h1 className="max-w-4xl text-5xl font-black leading-[0.98] tracking-[-0.055em] text-white sm:text-6xl lg:text-7xl">
+            <h1 className="max-w-4xl text-[2.6rem] font-black leading-[0.98] tracking-[-0.055em] text-white sm:text-6xl lg:text-7xl">
               Clear accounts.
               <span className="block text-[#ffd65a]">Calmer decisions.</span>
             </h1>
-            <p className="mt-7 max-w-2xl text-lg leading-8 text-[#d7edff] sm:text-xl">
+            <p className="mt-7 max-w-2xl text-base leading-7 text-[#d7edff] sm:text-xl sm:leading-8">
               A multi-tenant workspace for customers, invoices, payments, and the
               complete story behind every balance.
             </p>
@@ -112,7 +112,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="rounded-4xl border-2 border-white/30 bg-white/10 p-6 text-white shadow-[0_14px_0_rgba(4,30,68,0.2)] backdrop-blur sm:p-8">
+          <div className="rounded-4xl border-2 border-white/30 bg-white/10 p-4 text-white shadow-[0_14px_0_rgba(4,30,68,0.2)] backdrop-blur sm:p-8">
             <p className="text-xs font-black uppercase tracking-[0.22em] text-[#ffd65a]">
               Request journey
             </p>
@@ -140,10 +140,10 @@ export default function Home() {
             <p className="inline-flex rounded-md bg-[#e8f8dc] px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-[#159447]">
               With gratitude
             </p>
-            <h2 className="mt-4 text-4xl font-black tracking-[-0.045em] text-[#082d63] sm:text-5xl">
+            <h2 className="mt-4 text-3xl font-black tracking-[-0.045em] text-[#082d63] sm:text-5xl">
               I am very thankful to you.
             </h2>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-[#58718c]">
+            <p className="mt-6 max-w-2xl text-base leading-7 text-[#58718c] sm:text-lg sm:leading-8">
               My heartfelt thanks to the Ministry of IT &amp; Telecom, the
               Pakistan Software Export Board (PSEB) and COMSTECH for this
               internship. Building
@@ -152,10 +152,10 @@ export default function Home() {
               deployment. Thank you for the guidance, the opportunity and the
               trust that made this journey possible.
             </p>
-            <p className="mt-4 max-w-2xl text-lg leading-8 text-[#58718c]">
+            <p className="mt-4 max-w-2xl text-base leading-7 text-[#58718c] sm:text-lg sm:leading-8">
               The learning continues: I am now building new skills in AI and
               Machine Learning through{" "}
-              <strong className="rounded bg-[#ffd65a] px-1 font-black text-[#082d63]">
+              <strong className="whitespace-nowrap rounded bg-[#ffd65a] px-1 font-black text-[#082d63]">
                 PSEB&apos;s three-month bootcamp
               </strong>
               . PSEB has
