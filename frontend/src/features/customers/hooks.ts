@@ -25,10 +25,17 @@ export const customerKeys = {
 // Learning mode: every fetch takes the same demo duration, and opening a page
 // always refetches (instead of reusing the 60s cache) so the request
 // animation is visible on every visit.
-export function useCustomers(page: number, size: number) {
+// Pass { animate: false } to load without the demo delay (the dashboard
+// replays the animation on hover or tap instead).
+export function useCustomers(
+  page: number,
+  size: number,
+  { animate = true }: { animate?: boolean } = {},
+) {
   return useQuery({
     queryKey: customerKeys.list(page, size),
-    queryFn: () => withMinDuration(getCustomers(page, size)),
+    queryFn: () =>
+      animate ? withMinDuration(getCustomers(page, size)) : getCustomers(page, size),
     refetchOnMount: "always",
   });
 }
