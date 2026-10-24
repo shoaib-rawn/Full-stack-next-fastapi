@@ -1,3 +1,4 @@
+import { LedgerLogo } from "@/components/ledger-logo";
 import {
   ConceptStep,
   MiniCookie,
@@ -21,9 +22,7 @@ export default function AuthLayout({
           <div className="absolute -right-16 -top-16 size-48 rounded-full bg-[#ffd65a]/25" />
           <div className="relative">
             <div className="flex items-center gap-3">
-              <span className="grid size-12 place-items-center rounded-xl border-2 border-white/70 bg-white/10 text-sm font-black">
-                LL
-              </span>
+              <LedgerLogo className="size-12" />
               <div>
                 <p className="text-xl font-black">LedgerLite</p>
                 <p className="text-xs font-semibold text-[#cceaff]">Secure data journey</p>
