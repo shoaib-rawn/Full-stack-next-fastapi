@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { ApiStatus } from "@/components/api-status";
+import { DailyAyah } from "@/components/daily-ayah";
 import { LandingRequestDemo } from "@/components/landing-request-demo";
 import { TributeCard } from "@/components/tribute-card";
 import { VisionCard } from "@/components/vision-card";
@@ -52,9 +53,9 @@ export default function Home() {
             className="h-10 w-auto sm:h-12"
             priority
           />
-          <p className="hidden text-center text-[11px] font-bold uppercase tracking-[0.2em] text-[#58718c] md:block">
-            Internship project · Government of Pakistan
-          </p>
+          <div className="hidden min-w-0 flex-1 lg:block">
+            <DailyAyah />
+          </div>
           <Image
             src="/logos/moitt-logo.png"
             alt="Ministry of Information Technology & Telecom, Government of Pakistan logo"
