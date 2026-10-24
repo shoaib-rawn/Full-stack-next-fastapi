@@ -112,7 +112,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="hidden rounded-4xl border-2 border-white/30 bg-white/10 p-4 text-white sm:block shadow-[0_14px_0_rgba(4,30,68,0.2)] backdrop-blur sm:p-8">
+          <div className="rounded-4xl border-2 border-white/30 bg-white/10 p-4 text-white shadow-[0_14px_0_rgba(4,30,68,0.2)] backdrop-blur sm:p-8">
             <p className="text-xs font-black uppercase tracking-[0.22em] text-[#ffd65a]">
               Request journey
             </p>
