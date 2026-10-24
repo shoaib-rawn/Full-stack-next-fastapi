@@ -617,7 +617,7 @@ export function RequestAnimation({
         </div>
       </div>
 
-      <div className="mt-5 flex items-start">
+      <div className="mt-5 hidden items-start sm:flex">
         {flow.nodes.map((item, index) => {
           const isFailed = failedHere && index === outcome.failAt;
           const isCurrent = index === shown && !isFailed && !settled;
@@ -676,6 +676,20 @@ export function RequestAnimation({
           );
         })}
       </div>
+
+      <MobileSteps
+        nodes={flow.nodes}
+        states={flow.nodes.map((_, index) =>
+          failedHere && index === outcome.failAt
+            ? "failed"
+            : index < shown || (settled && index === shown)
+              ? "done"
+              : index === shown
+                ? "current"
+                : "pending",
+        )}
+        info={flow.nodes.map((_, index) => (index <= shown ? outcome.info[index] : undefined))}
+      />
 
       {failedHere ? (
         <p className="ll-row-in mt-5 rounded-xl border border-[#f1a8bc] bg-[#ffe3eb] px-4 py-3 text-sm font-bold text-[#a3234c]">
@@ -737,7 +751,7 @@ function DemoAnimation({ flowName }: { flowName: FlowName }) {
         </div>
       </div>
 
-      <div className="mt-5 flex items-start">
+      <div className="mt-5 hidden items-start sm:flex">
         {flow.nodes.map((node, index) => (
           <div key={node.label} className={index === 0 ? "flex" : "flex flex-1"}>
             {index > 0 && (
@@ -781,6 +795,8 @@ function DemoAnimation({ flowName }: { flowName: FlowName }) {
         ))}
       </div>
 
+      <MobileSteps nodes={flow.nodes} stepDelayMs={stepMs} />
+
       <div className="mt-5 grid">
         {flow.nodes.map((node, index) => (
           <p
@@ -821,7 +837,7 @@ function FailedRequest({
         <MethodBadge method={flow.method} />
       </div>
 
-      <div className="mt-5 flex items-start">
+      <div className="mt-5 hidden items-start sm:flex">
         {flow.nodes.map((node, index) => {
           const isFailedNode = index === failAt;
 
@@ -856,11 +872,92 @@ function FailedRequest({
         })}
       </div>
 
+      <MobileSteps
+        nodes={flow.nodes}
+        states={flow.nodes.map((_, index) =>
+          index === failAt ? "failed" : index < failAt ? "done" : "pending",
+        )}
+      />
+
       <p className="ll-row-in mt-5 rounded-xl border border-[#f1a8bc] bg-[#ffe3eb] px-4 py-3 text-sm font-bold text-[#a3234c]">
         <span className="mr-2 rounded-md bg-[#d7344f] px-2 py-0.5 text-xs text-white">✕ {flow.nodes[failAt].label}</span>
         {error}
       </p>
     </div>
+  );
+}
+
+type StepState = "done" | "current" | "failed" | "pending";
+
+// Phone layout: the same steps as a vertical list, so long labels like
+// /api/organizations/current never squeeze or clip. Desktop keeps the row.
+function MobileSteps({
+  nodes,
+  states,
+  info,
+  stepDelayMs,
+}: {
+  nodes: FlowNode[];
+  states?: StepState[];
+  info?: (string | undefined)[];
+  // Demo flows: light each step in turn with CSS instead of state.
+  stepDelayMs?: number;
+}) {
+  return (
+    <ol className="mt-4 grid grid-cols-[minmax(0,1fr)] gap-1.5 sm:hidden">
+      {nodes.map((node, index) => {
+        const state = states?.[index] ?? "pending";
+        const animated = stepDelayMs !== undefined;
+        return (
+          <li
+            key={node.label}
+            className={`flex min-w-0 items-center gap-2.5 rounded-xl border px-2.5 py-2 transition ${
+              state === "failed"
+                ? "border-[#f1a8bc] bg-[#ffe3eb]"
+                : state === "current"
+                  ? "border-[#f0c557] bg-[#fffaf0] ring-2 ring-[#ffd65a]"
+                  : "border-[#e2eef6] bg-[#f9fcff]"
+            } ${!animated && state === "pending" ? "opacity-45" : ""} ${animated ? "ll-node" : ""}`}
+            style={animated ? { animationDelay: `${index * stepDelayMs}ms` } : undefined}
+          >
+            <span
+              className={`relative grid size-9 shrink-0 place-items-center rounded-xl border-2 text-base font-black ${tones[node.tone]}`}
+            >
+              {node.icon}
+              {state === "current" && (
+                <span className="absolute inset-0 animate-ping rounded-xl bg-[#ffd65a]/50" />
+              )}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-xs font-black text-[#082d63]">{node.label}</span>
+              <span className="block truncate text-[11px] text-[#58718c]">{node.sub}</span>
+            </span>
+            {info?.[index] && (
+              <span
+                className={`max-w-[40%] min-w-0 truncate rounded px-1.5 py-0.5 font-mono text-[10px] font-bold ${
+                  state === "failed" ? "bg-white text-[#a3234c]" : "bg-[#eef6fb] text-[#0759a8]"
+                }`}
+              >
+                {info[index]}
+              </span>
+            )}
+            {state === "done" && (
+              <span className="grid size-5 shrink-0 place-items-center rounded-full bg-[#159447] text-[10px] font-black text-white">
+                ✓
+              </span>
+            )}
+            {state === "failed" && (
+              <span className="grid size-5 shrink-0 place-items-center rounded-full bg-[#d7344f] text-[10px] font-black text-white">
+                ✕
+              </span>
+            )}
+            {state === "current" && (
+              <span className="inline-block size-4 shrink-0 animate-spin rounded-full border-2 border-[#1267c9] border-t-transparent" />
+            )}
+          </li>
+        );
+      })}
+    </ol>
   );
 }
 
@@ -913,9 +1010,9 @@ export function RequestOverlay({
   return (
     <div
       onClick={showFailure ? () => setDismissed(true) : undefined}
-      className="fixed inset-0 z-50 grid place-items-center bg-[#082d63]/45 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 grid grid-cols-[minmax(0,1fr)] place-items-center overflow-y-auto bg-[#082d63]/45 p-3 backdrop-blur-sm sm:p-4"
     >
-      <div className="w-full max-w-xl">
+      <div className="w-full min-w-0 max-w-xl">
         <RequestAnimation flow={flow} error={showFailure ? error : null} />
       </div>
     </div>
