@@ -12,7 +12,7 @@ const layers = [
 
 export function LandingRequestDemo() {
   return (
-    <div className="relative overflow-hidden rounded-4xl border-2 border-[#082d63] bg-linear-to-br from-[#061f45] via-[#0a3a7a] to-[#061f45] p-6 text-white shadow-[0_12px_0_#041a3a] sm:p-10">
+    <div className="relative overflow-hidden rounded-4xl border-2 border-[#082d63] bg-linear-to-br from-[#061f45] via-[#0a3a7a] to-[#061f45] p-5 text-white shadow-[0_12px_0_#041a3a] sm:p-10">
       {/* Blueprint grid */}
       <div
         aria-hidden
@@ -30,22 +30,22 @@ export function LandingRequestDemo() {
           {layers.map((layer, index) => (
             <li key={layer.name} className={index === 0 ? "flex" : "flex flex-1 items-center"}>
               {index > 0 && (
-                <div className="relative mx-1 flex flex-1 items-center sm:mx-2">
+                <div className="relative mx-0.5 flex flex-1 items-center sm:mx-2">
                   <span className="h-0 flex-1 border-t-2 border-dashed border-white/40" />
-                  <span className="absolute left-1/2 grid size-7 -translate-x-1/2 place-items-center rounded-full border-2 border-[#ffd65a] bg-[#082d63] text-xs font-black text-[#ffd65a] sm:size-8 sm:text-sm">
+                  <span className="absolute left-1/2 grid size-5 -translate-x-1/2 place-items-center rounded-full border-2 border-[#ffd65a] bg-[#082d63] text-[10px] font-black text-[#ffd65a] sm:size-8 sm:text-sm">
                     ?
                   </span>
                 </div>
               )}
-              <div className="flex w-16 flex-col items-center text-center sm:w-28">
+              <div className="flex w-14 flex-col items-center text-center sm:w-28">
                 <span
-                  className="grid size-14 place-items-center rounded-2xl border-2 border-white/30 text-2xl font-black shadow-[0_6px_0_rgba(0,0,0,0.25)] sm:size-20 sm:text-3xl"
+                  className="grid size-11 place-items-center rounded-xl border-2 border-white/30 text-lg font-black shadow-[0_6px_0_rgba(0,0,0,0.25)] sm:size-20 sm:rounded-2xl sm:text-3xl"
                   style={{ backgroundColor: layer.color }}
                 >
                   {layer.icon}
                 </span>
-                <p className="mt-3 text-xs font-black sm:text-sm">{layer.name}</p>
-                <p className="text-[10px] text-[#cceaff] sm:text-xs">{layer.tech}</p>
+                <p className="mt-2 text-[10px] font-black sm:mt-3 sm:text-sm">{layer.name}</p>
+                <p className="text-[9px] text-[#cceaff] sm:text-xs">{layer.tech}</p>
               </div>
             </li>
           ))}

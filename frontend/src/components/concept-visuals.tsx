@@ -15,9 +15,9 @@ export function ConceptStep({
   children: ReactNode;
 }) {
   return (
-    <div className="grid grid-cols-[1fr_9.5rem] items-center gap-3 rounded-xl border border-white/20 bg-white/10 p-3 sm:grid-cols-[1fr_11rem]">
+    <div className="grid grid-cols-[minmax(0,1fr)_8.5rem] items-center gap-2 rounded-xl border border-white/20 bg-white/10 p-3 sm:grid-cols-[1fr_11rem]">
       <div className="flex items-center gap-3">
-        <span className="grid size-9 shrink-0 place-items-center rounded-full bg-[#ffd65a] font-black text-[#082d63]">
+        <span className="grid size-8 shrink-0 place-items-center rounded-full bg-[#ffd65a] sm:size-9 font-black text-[#082d63]">
           {number}
         </span>
         <div>
