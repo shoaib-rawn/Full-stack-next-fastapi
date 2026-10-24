@@ -1,5 +1,6 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
 
+import { ApiError } from "@/lib/api-error";
 import {
   finishRun,
   flowForRequest,
@@ -62,15 +63,7 @@ httpClient.interceptors.response.use(
 
 // Keeps the HTTP status so callers (e.g. retry rules) can tell a
 // "not found" answer apart from a network failure.
-export class ApiError extends Error {
-  constructor(
-    message: string,
-    readonly status: number | undefined,
-  ) {
-    super(message);
-    this.name = "ApiError";
-  }
-}
+export { ApiError };
 
 // FastAPI puts the reason in `detail` (e.g. 409 "A customer with invoices
 // cannot be deleted."). Surface that instead of axios's generic
