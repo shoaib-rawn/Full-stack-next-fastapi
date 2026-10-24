@@ -25,7 +25,7 @@ export function DashboardOverview({ fullName, email, role }: DashboardOverviewPr
 
   return (
     <div className="mx-auto max-w-7xl">
-      <section className="grid overflow-hidden rounded-[1.75rem] border-2 border-[#72c8f1] bg-white shadow-[0_8px_0_rgba(8,45,99,0.08)] lg:grid-cols-[1.15fr_0.85fr]">
+      <section className="grid grid-cols-1 overflow-hidden rounded-[1.75rem] [&>*]:min-w-0 border-2 border-[#72c8f1] bg-white shadow-[0_8px_0_rgba(8,45,99,0.08)] lg:grid-cols-[1.15fr_0.85fr]">
         <div className="bg-linear-to-br from-[#e5f6ff] via-white to-[#f4fbff] p-6 sm:p-8">
           <span className="inline-flex rounded-md bg-[#1267c9] px-3 py-1 text-xs font-black uppercase tracking-wider text-white">Live workspace</span>
           <h1 className="mt-4 text-3xl font-black tracking-tight text-[#082d63] md:text-5xl">Welcome back, {fullName}</h1>
@@ -45,7 +45,7 @@ export function DashboardOverview({ fullName, email, role }: DashboardOverviewPr
         </div>
       </section>
 
-      <section className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <section className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <MetricCard number="01" label="Total customers" value={summary.isFetching ? "..." : String(summary.data?.total_customers ?? 0)} tone="blue" />
         <MetricCard number="02" label="Total invoices" value={summary.isFetching ? "..." : String(summary.data?.total_invoices ?? 0)} tone="pink" />
         <MetricCard number="03" label="Invoices outstanding" value={summary.isFetching ? "..." : String(outstandingCount)} tone="green" />
@@ -61,17 +61,17 @@ export function DashboardOverview({ fullName, email, role }: DashboardOverviewPr
       )}
 
       {summary.data && !summary.isFetching && (
-        <section className="mt-6 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
-          <article className="rounded-3xl border-2 border-[#72c8f1] bg-white p-5 shadow-[0_8px_0_rgba(8,45,99,0.07)] sm:p-6">
+        <section className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-[0.9fr_1.1fr] [&>*]:min-w-0">
+          <article className="rounded-3xl border-2 border-[#72c8f1] bg-white p-4 shadow-[0_8px_0_rgba(8,45,99,0.07)] sm:p-6">
             <span className="rounded-md bg-[#ccecff] px-2 py-1 text-xs font-black text-[#0759a8]">INVOICE LIFECYCLE</span>
-            <h2 className="mt-3 text-2xl font-black text-[#082d63]">Status distribution</h2>
+            <h2 className="mt-3 text-xl font-black text-[#082d63] sm:text-2xl">Status distribution</h2>
             <p className="mt-1 text-sm text-[#58718c]">Chart.js renders the tenant-scoped invoice counts.</p>
             <div className="mt-4"><InvoiceStatusChart summary={summary.data} /></div>
           </article>
 
-          <article className="rounded-3xl border-2 border-[#f1c75b] bg-[#fffdf4] p-5 shadow-[0_8px_0_rgba(8,45,99,0.07)] sm:p-6">
+          <article className="rounded-3xl border-2 border-[#f1c75b] bg-[#fffdf4] p-4 shadow-[0_8px_0_rgba(8,45,99,0.07)] sm:p-6">
             <span className="rounded-md bg-[#ffe79c] px-2 py-1 text-xs font-black text-[#765603]">CURRENCY-SAFE TOTALS</span>
-            <h2 className="mt-3 text-2xl font-black text-[#082d63]">Money overview</h2>
+            <h2 className="mt-3 text-xl font-black text-[#082d63] sm:text-2xl">Money overview</h2>
             <p className="mt-1 text-sm text-[#58718c]">Different currencies remain separate to keep totals meaningful.</p>
 
             {summary.data.currency_totals.length === 0 ? (
@@ -79,12 +79,12 @@ export function DashboardOverview({ fullName, email, role }: DashboardOverviewPr
             ) : (
               <div className="mt-5 grid gap-4">
                 {summary.data.currency_totals.map((totals) => (
-                  <div key={totals.currency} className="rounded-2xl border-2 border-[#ead27f] bg-white p-4">
+                  <div key={totals.currency} className="min-w-0 rounded-2xl border-2 border-[#ead27f] bg-white p-3 sm:p-4">
                     <div className="flex items-center justify-between gap-3">
                       <p className="text-lg font-black text-[#082d63]">{totals.currency}</p>
-                      <span className="rounded-full bg-[#fff1bc] px-3 py-1 text-xs font-black text-[#765603]">Accounting totals</span>
+                      <span className="hidden rounded-full bg-[#fff1bc] px-3 py-1 text-xs font-black text-[#765603] min-[400px]:inline-flex">Accounting totals</span>
                     </div>
-                    <dl className="mt-4 grid gap-3 sm:grid-cols-3">
+                    <dl className="mt-3 grid gap-2 sm:mt-4 sm:grid-cols-3 sm:gap-3">
                       <MoneyItem label="Invoiced" value={formatMoney(totals.total_invoiced, totals.currency)} />
                       <MoneyItem label="Paid" value={formatMoney(totals.total_paid, totals.currency)} />
                       <MoneyItem label="Outstanding" value={formatMoney(totals.total_outstanding, totals.currency)} />
@@ -147,9 +147,9 @@ function MetricCard({ number, label, value, tone }: { number: string; label: str
 
 function MoneyItem({ label, value }: { label: string; value: string }) {
   return (
-    <div>
-      <dt className="text-xs font-black uppercase tracking-wider text-[#6f7f8f]">{label}</dt>
-      <dd className="mt-1 break-words text-lg font-black text-[#082d63]">{value}</dd>
+    <div className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 rounded-xl bg-[#fffaf0] px-3 py-2 sm:block sm:bg-transparent sm:p-0">
+      <dt className="shrink-0 text-xs font-black uppercase tracking-wider text-[#6f7f8f]">{label}</dt>
+      <dd className="ml-auto whitespace-nowrap sm:whitespace-normal text-right text-base font-black text-[#082d63] sm:mt-1 sm:ml-0 sm:text-left sm:text-lg">{value}</dd>
     </div>
   );
 }
