@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useMemo, useState, useSyncExternalStore } from "react";
+import { Fragment, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
 import "./notebook.css";
 import type {
@@ -226,14 +226,45 @@ function parseLearned(raw: string) {
   }
 }
 
+// One request per visit for the English guide, shared by every render.
+let englishGuidePromise: Promise<SkillGuide | null> | null = null;
+
+function loadEnglishGuide() {
+  englishGuidePromise ??= fetch("/notebook/guide-en")
+    .then((response) => (response.ok ? (response.json() as Promise<SkillGuide>) : null))
+    .catch(() => null)
+    .then((guide) => {
+      // Let a later click try again after a network error.
+      if (!guide) englishGuidePromise = null;
+      return guide;
+    });
+  return englishGuidePromise;
+}
+
 export function SkillNotebook({
-  guides,
+  guide: urduGuide,
+  hasEnglish,
 }: {
-  guides: { ur: SkillGuide; en?: SkillGuide };
+  guide: SkillGuide;
+  hasEnglish: boolean;
 }) {
   const chosenLanguage = useSyncExternalStore(subscribeLanguage, readLanguage, () => "ur" as const);
-  const language: GuideLanguage = chosenLanguage === "en" && guides.en ? "en" : "ur";
-  const guide = language === "en" && guides.en ? guides.en : guides.ur;
+  const [englishGuide, setEnglishGuide] = useState<SkillGuide | null>(null);
+
+  useEffect(() => {
+    if (!hasEnglish || chosenLanguage !== "en" || englishGuide) return;
+    let active = true;
+    loadEnglishGuide().then((loaded) => {
+      if (active && loaded) setEnglishGuide(loaded);
+    });
+    return () => {
+      active = false;
+    };
+  }, [chosenLanguage, englishGuide, hasEnglish]);
+
+  // Until the English guide arrives, keep showing Roman Urdu.
+  const language: GuideLanguage = chosenLanguage === "en" && englishGuide ? "en" : "ur";
+  const guide = language === "en" && englishGuide ? englishGuide : urduGuide;
   const l = labels[language];
   const categories = useMemo(
     () => [...new Set(guide.skills.map((skill) => skill.category))],
@@ -320,7 +351,9 @@ export function SkillNotebook({
             <h1 className="text-lg font-black sm:text-xl">{l.title}</h1>
           </div>
 
-          {guides.en && <LanguageToggle language={language} />}
+          {hasEnglish && (
+            <LanguageToggle language={chosenLanguage} />
+          )}
 
           <div className="rounded-xl bg-white/10 px-4 py-2 text-right">
             <p className="text-xs font-bold text-[#b9d8f4]">{l.progress}</p>
@@ -585,6 +618,9 @@ function LanguageToggle({ language }: { language: GuideLanguage }) {
           role="radio"
           aria-checked={language === option.value}
           onClick={() => writeLanguage(option.value)}
+          // Start loading English as soon as the reader reaches for it.
+          onPointerEnter={option.value === "en" ? () => void loadEnglishGuide() : undefined}
+          onFocus={option.value === "en" ? () => void loadEnglishGuide() : undefined}
           className={`relative z-10 rounded-full px-3 py-1.5 text-xs font-black transition-colors duration-300 ${language === option.value ? "text-[#082d63]" : "text-white"}`}
         >
           {option.label}

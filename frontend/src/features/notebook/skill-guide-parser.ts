@@ -101,11 +101,8 @@ function parseSections(body: string) {
 
 // The Roman Urdu master is required; the English translation is optional,
 // so the notebook still works (without the toggle) if it is missing.
-export function readSkillGuides(): { ur: SkillGuide; en?: SkillGuide } {
-  return {
-    ur: readSkillGuide("ur"),
-    en: findGuide("en").matched ? readSkillGuide("en") : undefined,
-  };
+export function hasEnglishGuide() {
+  return Boolean(findGuide("en").matched);
 }
 
 export function readSkillGuide(language: GuideLanguage = "ur"): SkillGuide {
