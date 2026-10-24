@@ -232,7 +232,14 @@ function DemoZone({
           </span>
         </p>
       )}
-      <div className={playing ? "min-h-[26rem] sm:min-h-[22rem]" : undefined}>{children}</div>
+      {/* Smoky until its request has been watched once, then crisp for good. */}
+      <div
+        className={`transition-[filter,opacity] duration-700 ${
+          played ? "" : "pointer-events-none select-none opacity-60 blur-[3px] saturate-50"
+        } ${playing ? "min-h-[26rem] sm:min-h-[22rem]" : ""}`}
+      >
+        {children}
+      </div>
       {playing && (
         <div className="absolute inset-x-0 bottom-0 top-8 z-10 overflow-y-auto rounded-3xl bg-[#f5faff] p-2 sm:p-4">
           <RequestAnimation flow={flow} />
