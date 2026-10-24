@@ -31,6 +31,9 @@ export type Invoice = {
   due_date: string | null;
   notes: string | null;
   line_items: InvoiceLineItem[];
+  voided_at?: string | null;
+  voided_by_user_id?: number | null;
+  void_reason?: string | null;
   created_at: string;
   updated_at: string;
 };

@@ -35,6 +35,7 @@ class PaymentResponse(BaseModel):
     paid_at: datetime
     reversed_at: datetime | None
     reversal_reason: str | None
+    reversed_by_user_id: int | None = None
     created_at: datetime
     updated_at: datetime
 

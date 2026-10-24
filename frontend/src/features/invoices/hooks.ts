@@ -108,7 +108,7 @@ export function useVoidInvoice(id: number) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: () => withMinDuration(voidInvoice(id)),
+    mutationFn: (reason: string) => withMinDuration(voidInvoice(id, reason)),
     onSuccess: (invoice) => {
       queryClient.setQueryData(invoiceKeys.detail(invoice.id), invoice);
       void queryClient.invalidateQueries({ queryKey: invoiceKeys.all });

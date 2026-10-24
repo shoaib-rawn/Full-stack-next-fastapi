@@ -10,6 +10,7 @@ export type Payment = {
   paid_at: string;
   reversed_at: string | null;
   reversal_reason: string | null;
+  reversed_by_user_id?: number | null;
   created_at: string;
   updated_at: string;
 };

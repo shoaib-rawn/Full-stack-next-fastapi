@@ -224,6 +224,7 @@ async def reverse_payment(
 
     payment.reversed_at = datetime.now(timezone.utc)
     payment.reversal_reason = payload.reason
+    payment.reversed_by_user_id = current_user.id
     invoice.amount_paid = new_amount_paid
     invoice.balance_due = money(invoice.total - new_amount_paid)
     invoice.status = (

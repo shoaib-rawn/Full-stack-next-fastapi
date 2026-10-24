@@ -134,7 +134,18 @@ class InvoiceResponse(BaseModel):
     due_date: date | None
     notes: str | None
     line_items: list[InvoiceLineItemResponse]
+    voided_at: datetime | None = None
+    voided_by_user_id: int | None = None
+    void_reason: str | None = None
     created_at: datetime
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class InvoiceVoidRequest(BaseModel):
+    reason: str = Field(
+        min_length=3,
+        max_length=250,
+        examples=["Issued to the wrong customer."],
+    )

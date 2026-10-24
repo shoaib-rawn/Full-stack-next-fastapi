@@ -64,8 +64,10 @@ export async function updateInvoice(
   return response.data;
 }
 
-export async function voidInvoice(id: number): Promise<Invoice> {
-  const response = await httpClient.post<Invoice>(`/invoices/${id}/void`);
+export async function voidInvoice(id: number, reason: string): Promise<Invoice> {
+  const response = await httpClient.post<Invoice>(`/invoices/${id}/void`, {
+    reason,
+  });
 
   return response.data;
 }

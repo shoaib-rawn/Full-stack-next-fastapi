@@ -1,10 +1,11 @@
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     CheckConstraint,
     Date,
+    DateTime,
     ForeignKey,
     Numeric,
     String,
@@ -113,6 +114,22 @@ class Invoice(TimestampMixin, Base):
 
     notes: Mapped[str | None] = mapped_column(
         Text,
+        nullable=True,
+    )
+
+    # Void audit trail: when, by whom and why the invoice was voided.
+    voided_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+    voided_by_user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+
+    void_reason: Mapped[str | None] = mapped_column(
+        String(250),
         nullable=True,
     )
 
