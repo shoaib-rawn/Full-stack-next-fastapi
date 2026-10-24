@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ApiStatus } from "@/components/api-status";
 import { LandingRequestDemo } from "@/components/landing-request-demo";
 import { TributeCard } from "@/components/tribute-card";
+import { VisionCard } from "@/components/vision-card";
 import {
   ConceptStep,
   MiniCompanyCache,
@@ -87,7 +88,9 @@ export default function Home() {
           </div>
         </nav>
 
-        <div className="mx-auto grid grid-cols-1 gap-12 pb-4 pt-12 sm:pt-20 lg:grid-cols-[1.15fr_0.85fr] [&>*]:min-w-0 lg:items-end lg:pt-28">
+        <VisionCard />
+
+        <div className="mx-auto grid grid-cols-1 gap-12 pb-4 pt-10 sm:pt-16 lg:grid-cols-[1.15fr_0.85fr] [&>*]:min-w-0 lg:items-end lg:pt-28">
           <div>
             <p className="mb-5 inline-flex rounded-md bg-[#ffd65a] px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-[#082d63]">
               My LedgerLite Journey
