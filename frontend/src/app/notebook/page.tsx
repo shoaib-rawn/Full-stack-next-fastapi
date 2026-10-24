@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { readSkillGuides } from "@/features/notebook/skill-guide-parser";
+import { hasEnglishGuide, readSkillGuide } from "@/features/notebook/skill-guide-parser";
 import { SkillNotebook } from "@/features/notebook/skill-notebook";
 
 export const metadata: Metadata = {
@@ -11,7 +11,8 @@ export const metadata: Metadata = {
 
 // Public page: reachable from the sign-in screen without logging in. The
 // guide is parsed on the server from docs/ledgerlite-skill-wise-interview-guide.md
-// (Roman Urdu master) and its .en.md translation for the language toggle.
+// (Roman Urdu master). The .en.md translation is served from /notebook/guide-en
+// and loaded only when a reader switches to English.
 export default function NotebookPage() {
-  return <SkillNotebook guides={readSkillGuides()} />;
+  return <SkillNotebook guide={readSkillGuide("ur")} hasEnglish={hasEnglishGuide()} />;
 }
