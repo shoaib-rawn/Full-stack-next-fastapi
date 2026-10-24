@@ -5,7 +5,7 @@ export async function ApiStatus() {
 
   return (
     <div
-      className={`flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-2.5 py-2 text-xs font-semibold sm:px-3 ${
+      className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1.5 text-[11px] font-bold ring-2 ring-white/70 sm:gap-2 sm:px-3 sm:py-2 sm:text-xs sm:font-semibold sm:ring-0 ${
         health.online
           ? "bg-[#daf1e9] text-[#176252]"
           : "bg-[#fbe8dc] text-[#9a4b24]"
@@ -17,13 +17,7 @@ export async function ApiStatus() {
           health.online ? "bg-[#1d9b78]" : "bg-[#d26732]"
         }`}
       />
-      <span className="sm:hidden">
-        API
-        <span className="sr-only">{health.online ? " connected" : " offline"}</span>
-      </span>
-      <span className="hidden sm:inline">
-        {health.online ? "API connected" : "API offline"}
-      </span>
+      {health.online ? "API connected" : "API offline"}
     </div>
   );
 }
