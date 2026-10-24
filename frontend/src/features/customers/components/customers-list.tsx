@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import {
   usePathname,
@@ -9,8 +9,9 @@ import {
 } from "next/navigation";
 
 import { RequestAnimation } from "@/components/request-animation";
+import { QuietLoading, RevealZone } from "@/components/reveal-zone";
 
-import { useCustomers } from "../hooks";
+import { customerKeys, useCustomers } from "../hooks";
 import { InlineCustomerEditor } from "./inline-customer-editor";
 
 const PAGE_SIZE = 10;
@@ -41,14 +42,8 @@ export function CustomersList({ canDelete }: { canDelete: boolean }) {
     router.push(`${pathname}?${params.toString()}`);
   }
 
-  // Every fetch (first load, revisit, refetch after a change) shows the
-  // request animation for the same demo duration.
-  if (isPending || isFetching) {
-    return (
-      <div className="mt-8">
-        <RequestAnimation flow="customers" />
-      </div>
-    );
+  if (isPending) {
+    return <QuietLoading className="mt-8" />;
   }
 
   if (isError) {
@@ -62,18 +57,29 @@ export function CustomersList({ canDelete }: { canDelete: boolean }) {
     );
   }
 
+  const zone = (children: ReactNode) => (
+    <RevealZone
+      id="customers-list"
+      flow="customers"
+      queryKey={customerKeys.list(page, PAGE_SIZE)}
+      className="mt-8"
+    >
+      {children}
+    </RevealZone>
+  );
+
   if (data.items.length === 0) {
-    return (
-      <div className="mt-8 rounded-3xl border-2 border-dashed border-[#83cff4] bg-white p-10 text-center">
+    return zone(
+      <div className="rounded-3xl border-2 border-dashed border-[#83cff4] bg-white p-10 text-center">
         <span className="mx-auto grid size-14 place-items-center rounded-full bg-[#e5f6ff] text-2xl">👤</span>
         <h2 className="mt-4 text-xl font-black text-[#082d63]">No customers yet</h2>
         <p className="mt-2 text-[#58718c]">Use the Create button to add your first customer record.</p>
-      </div>
+      </div>,
     );
   }
 
-  return (
-    <section className="mt-8 overflow-hidden rounded-3xl border-2 border-[#72c8f1] bg-white shadow-[0_8px_0_rgba(8,45,99,0.07)]">
+  return zone(
+    <section className="overflow-hidden rounded-3xl border-2 border-[#72c8f1] bg-white shadow-[0_8px_0_rgba(8,45,99,0.07)]">
       <div className="flex items-center justify-between gap-4 bg-[#e5f6ff] px-5 py-4">
         <div>
           <span className="rounded-md bg-[#ccecff] px-2 py-1 text-xs font-black text-[#0759a8]">RESULT</span>
@@ -170,7 +176,7 @@ export function CustomersList({ canDelete }: { canDelete: boolean }) {
           Next →
         </button>
       </div>
-    </section>
+    </section>,
   );
 }
 

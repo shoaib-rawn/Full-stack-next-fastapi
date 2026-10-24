@@ -42,7 +42,7 @@ export function useInvoices(
 ) {
   return useQuery({
     queryKey: invoiceKeys.list(page, size, filters),
-    queryFn: () => withMinDuration(getInvoices(page, size, filters)),
+    queryFn: () => getInvoices(page, size, filters),
     refetchOnMount: "always",
   });
 }
@@ -50,7 +50,7 @@ export function useInvoices(
 export function useInvoice(id: number) {
   return useQuery({
     queryKey: invoiceKeys.detail(id),
-    queryFn: () => withMinDuration(getInvoice(id)),
+    queryFn: () => getInvoice(id),
     refetchOnMount: "always",
     enabled: Number.isInteger(id) && id > 0,
   });

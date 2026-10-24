@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { clearSeen } from "@/lib/seen-sections";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -27,6 +28,7 @@ export function SessionActivityGuard() {
         });
       } finally {
         queryClient.clear();
+        clearSeen();
         router.replace("/login?reason=idle");
         router.refresh();
       }

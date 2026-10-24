@@ -5,9 +5,10 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { RequestAnimation } from "@/components/request-animation";
+import { QuietLoading, RevealZone } from "@/components/reveal-zone";
 import { formatMoney } from "@/lib/money";
 
-import { useCustomerOptions, useInvoices } from "../hooks";
+import { invoiceKeys, useCustomerOptions, useInvoices } from "../hooks";
 import type { InvoiceStatus } from "../types";
 import { InvoiceStatusBadge } from "./status-badge";
 
@@ -129,19 +130,17 @@ export function InvoicesList() {
     </section>
   );
 
-  // Every fetch (first load, revisit, refetch after a change) shows the
-  // request animation for the same demo duration, like customers.
-  if (isPending || isFetching) {
+  if (isPending) {
     return (
       <>
         {banner}
         {filters}
-        <div className="mt-8">
-          <RequestAnimation flow="invoices" />
-        </div>
+        <QuietLoading className="mt-8" />
       </>
     );
   }
+
+  const zoneKey = invoiceKeys.list(page, PAGE_SIZE, { status, customerId });
 
   if (isError) {
     return (
@@ -172,7 +171,8 @@ export function InvoicesList() {
       <>
         {banner}
         {filters}
-        <div className="mt-8 rounded-3xl border-2 border-dashed border-[#83cff4] bg-white p-10 text-center">
+        <RevealZone id="invoices-list" flow="invoices" queryKey={zoneKey} className="mt-8">
+        <div className="rounded-3xl border-2 border-dashed border-[#83cff4] bg-white p-10 text-center">
           <span className="mx-auto grid size-14 place-items-center rounded-full bg-[#e5f6ff] text-2xl">🧾</span>
           <h2 className="mt-4 text-xl font-black text-[#082d63]">
             {status || customerId ? "No invoices match these filters" : "No invoices yet"}
@@ -191,6 +191,7 @@ export function InvoicesList() {
             </Link>
           )}
         </div>
+        </RevealZone>
       </>
     );
   }
@@ -199,7 +200,8 @@ export function InvoicesList() {
     <>
       {banner}
       {filters}
-      <section className="mt-6 overflow-hidden rounded-3xl border-2 border-[#72c8f1] bg-white shadow-[0_8px_0_rgba(8,45,99,0.07)]">
+      <RevealZone id="invoices-list" flow="invoices" queryKey={zoneKey} className="mt-6">
+      <section className="overflow-hidden rounded-3xl border-2 border-[#72c8f1] bg-white shadow-[0_8px_0_rgba(8,45,99,0.07)]">
         <div className="flex items-center justify-between gap-4 bg-[#e5f6ff] px-5 py-4">
           <div>
             <span className="rounded-md bg-[#ccecff] px-2 py-1 text-xs font-black text-[#0759a8]">RESULT</span>
@@ -282,6 +284,7 @@ export function InvoicesList() {
           </button>
         </div>
       </section>
+      </RevealZone>
     </>
   );
 }

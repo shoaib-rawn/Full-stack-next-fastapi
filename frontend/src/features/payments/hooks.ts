@@ -18,7 +18,7 @@ export const paymentKeys = {
 export function usePayments(invoiceId: number, page = 1, size = 50) {
   return useQuery({
     queryKey: paymentKeys.invoice(invoiceId, page, size),
-    queryFn: () => withMinDuration(getPayments(invoiceId, page, size)),
+    queryFn: () => getPayments(invoiceId, page, size),
     enabled: Number.isInteger(invoiceId) && invoiceId > 0,
   });
 }

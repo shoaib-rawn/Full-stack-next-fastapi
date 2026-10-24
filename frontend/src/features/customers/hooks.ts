@@ -22,20 +22,12 @@ export const customerKeys = {
   detail: (id: number) => ["customers", "detail", id] as const,
 };
 
-// Learning mode: every fetch takes the same demo duration, and opening a page
-// always refetches (instead of reusing the 60s cache) so the request
-// animation is visible on every visit.
-// Pass { animate: false } to load without the demo delay (the dashboard
-// replays the animation on hover or tap instead).
-export function useCustomers(
-  page: number,
-  size: number,
-  { animate = true }: { animate?: boolean } = {},
-) {
+// Queries load without the demo delay; RevealZone replays a request with
+// its animation when the user hovers or taps a section.
+export function useCustomers(page: number, size: number) {
   return useQuery({
     queryKey: customerKeys.list(page, size),
-    queryFn: () =>
-      animate ? withMinDuration(getCustomers(page, size)) : getCustomers(page, size),
+    queryFn: () => getCustomers(page, size),
     refetchOnMount: "always",
   });
 }
@@ -60,7 +52,7 @@ export function useCreateCustomer() {
 export function useCustomer(id: number) {
   return useQuery({
     queryKey: customerKeys.detail(id),
-    queryFn: () => withMinDuration(getCustomer(id)),
+    queryFn: () => getCustomer(id),
     refetchOnMount: "always",
     enabled: Number.isInteger(id) && id > 0,
   });

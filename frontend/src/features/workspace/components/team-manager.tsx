@@ -5,8 +5,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
 import { RequestAnimation, RequestOverlay } from "@/components/request-animation";
+import { RevealZone } from "@/components/reveal-zone";
 
-import { useCreateMember, useMembers, useUpdateMember } from "../hooks";
+import { useCreateMember, useMembers, useUpdateMember, workspaceKeys } from "../hooks";
 import { memberCreateSchema, type MemberCreateValues } from "../schemas";
 import type { Member } from "../types";
 
@@ -120,6 +121,7 @@ export function TeamManager({ currentUserId }: { currentUserId: number }) {
         </form>
       )}
 
+      <RevealZone id="team-members" flow="members" queryKey={workspaceKeys.memberPage(page, PAGE_SIZE)}>
       <section className="overflow-hidden rounded-3xl border-2 border-[#72c8f1] bg-white shadow-[0_8px_0_rgba(8,45,99,0.07)]">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b-2 border-[#b8dbea] bg-[#e5f6ff] p-5 sm:p-6">
           <div>
@@ -131,7 +133,7 @@ export function TeamManager({ currentUserId }: { currentUserId: number }) {
           </span>
         </div>
 
-        {members.isPending && <div className="p-4 sm:p-6"><RequestAnimation flow="members" /></div>}
+        {members.isPending && <p className="p-6 text-center text-sm font-bold text-[#7b93ab]">Loading…</p>}
         {members.isError && <div className="p-4 sm:p-6"><RequestAnimation flow="members" error={members.error.message} /></div>}
         {updateMember.isError && <ErrorBox message={updateMember.error.message} />}
 
@@ -174,6 +176,7 @@ export function TeamManager({ currentUserId }: { currentUserId: number }) {
           </div>
         )}
       </section>
+      </RevealZone>
 
       <RequestOverlay
         flow="member-create"

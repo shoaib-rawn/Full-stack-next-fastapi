@@ -9,8 +9,10 @@ import {
   RequestAnimation,
   RequestOverlay,
 } from "@/components/request-animation";
+import { QuietLoading, RevealZone } from "@/components/reveal-zone";
 
 import {
+  customerKeys,
   useCustomer,
   useDeleteCustomer,
   useUpdateCustomer,
@@ -34,8 +36,8 @@ export function CustomerDetail({
 }: CustomerDetailProps) {
   const customerQuery = useCustomer(id);
 
-  if (customerQuery.isPending || customerQuery.isFetching) {
-    return <RequestAnimation flow="customer" />;
+  if (customerQuery.isPending) {
+    return <QuietLoading />;
   }
 
   if (customerQuery.isError) {
@@ -47,16 +49,18 @@ export function CustomerDetail({
     );
   }
 
-  if (mode === "view") {
-    return <CustomerSummary customer={customerQuery.data} />;
-  }
-
   return (
-    <CustomerEditor
-      key={customerQuery.data.updated_at}
-      customer={customerQuery.data}
-      canDelete={canDelete}
-    />
+    <RevealZone id={`customer-${id}-${mode}`} flow="customer" queryKey={customerKeys.detail(id)}>
+      {mode === "view" ? (
+        <CustomerSummary customer={customerQuery.data} />
+      ) : (
+        <CustomerEditor
+          key={customerQuery.data.updated_at}
+          customer={customerQuery.data}
+          canDelete={canDelete}
+        />
+      )}
+    </RevealZone>
   );
 }
 

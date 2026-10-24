@@ -3,15 +3,16 @@
 import Link from "next/link";
 
 import { RequestAnimation } from "@/components/request-animation";
+import { QuietLoading, RevealZone } from "@/components/reveal-zone";
 
-import { useInvoice } from "../hooks";
+import { invoiceKeys, useInvoice } from "../hooks";
 import { InvoiceForm } from "./invoice-form";
 
 export function InvoiceEdit({ id }: { id: number }) {
   const invoiceQuery = useInvoice(id);
 
-  if (invoiceQuery.isPending || invoiceQuery.isFetching) {
-    return <RequestAnimation flow="invoice" />;
+  if (invoiceQuery.isPending) {
+    return <QuietLoading />;
   }
 
   if (invoiceQuery.isError) {
@@ -41,6 +42,8 @@ export function InvoiceEdit({ id }: { id: number }) {
   }
 
   return (
-    <InvoiceForm key={invoice.updated_at} mode="edit" invoice={invoice} />
+    <RevealZone id={`invoice-${id}-edit`} flow="invoice" queryKey={invoiceKeys.detail(id)}>
+      <InvoiceForm key={invoice.updated_at} mode="edit" invoice={invoice} />
+    </RevealZone>
   );
 }

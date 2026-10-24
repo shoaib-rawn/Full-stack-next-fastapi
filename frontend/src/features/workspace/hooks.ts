@@ -24,7 +24,7 @@ export const workspaceKeys = {
 export function useOrganization() {
   return useQuery({
     queryKey: workspaceKeys.organization,
-    queryFn: () => withMinDuration(getOrganization()),
+    queryFn: () => getOrganization(),
   });
 }
 
@@ -42,7 +42,7 @@ export function useUpdateOrganization() {
 export function useMembers(page: number, size: number) {
   return useQuery({
     queryKey: workspaceKeys.memberPage(page, size),
-    queryFn: () => withMinDuration(getMembers(page, size)),
+    queryFn: () => getMembers(page, size),
   });
 }
 
