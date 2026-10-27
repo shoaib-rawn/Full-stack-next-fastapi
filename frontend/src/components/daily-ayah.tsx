@@ -41,7 +41,7 @@ export function DailyAyah() {
           <blockquote
             lang="ar"
             dir="rtl"
-            className="font-[Amiri,'Noto_Naskh_Arabic','Traditional_Arabic',serif] text-2xl font-bold leading-snug text-[#082d63]"
+            className="font-[Amiri,'Noto_Naskh_Arabic','Traditional_Arabic',serif] text-xl font-bold sm:text-2xl leading-snug text-[#082d63]"
           >
             {ayah.arabic}
           </blockquote>

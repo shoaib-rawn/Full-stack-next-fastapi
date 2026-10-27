@@ -44,7 +44,7 @@ export default function Home() {
         <div className="pointer-events-none absolute -right-36 -top-44 -z-10 size-136 rounded-full bg-[#69ccf5]/30 blur-3xl" />
         <div className="pointer-events-none absolute -left-44 top-72 -z-10 size-96 rounded-full bg-[#ffd65a]/20 blur-3xl" />
 
-        <div className="mx-auto mb-4 flex items-center justify-between gap-4 rounded-2xl bg-white px-4 py-2 shadow-[0_8px_24px_rgba(4,30,68,0.25)] sm:px-6">
+        <div className="mx-auto mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-2xl bg-white px-4 py-2 shadow-[0_8px_24px_rgba(4,30,68,0.25)] sm:px-6">
           <Image
             src="/logos/pseb-logo.png"
             alt="Pakistan Software Export Board (PSEB) logo"
@@ -53,7 +53,8 @@ export default function Home() {
             className="h-10 w-auto sm:h-12"
             priority
           />
-          <div className="hidden min-w-0 flex-1 lg:block">
+          {/* Phones: the ayah gets its own row under the logos. Large screens: it sits between them. */}
+          <div className="order-last min-w-0 grow basis-full border-t border-[#e5eef4] pt-2 lg:order-none lg:flex-1 lg:border-0 lg:pt-0">
             <DailyAyah />
           </div>
           <Image
