@@ -28,6 +28,7 @@ const categoryRanges = [
   { end: 44, label: "Quality & boundaries" },
   { end: 45, label: "Reporting & analytics" },
   { end: 46, label: "Production & deployment" },
+  { end: 47, label: "AI assistant foundation" },
 ] as const;
 
 function categoryFor(skillNumber: number) {

@@ -164,6 +164,12 @@ const categoryStyles: Record<
     border: "#80ccd1",
     icon: "☁️",
   },
+  "AI assistant foundation": {
+    solid: "#3054a5",
+    soft: "#eaf1ff",
+    border: "#9bb6ee",
+    icon: "AI",
+  },
   "Additional skills": {
     solid: "#44546a",
     soft: "#edf2f7",

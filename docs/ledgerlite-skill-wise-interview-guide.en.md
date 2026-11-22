@@ -66,7 +66,8 @@ Do not memorize code. Understand the request journey and the decision behind eac
 | 43 | Installed vs actually implemented skills | Honest boundary documented |
 | 44 | Axios typed client, interceptors and refresh retry | Implemented |
 | 45 | Reporting aggregates, invoice filters and Chart.js | Implemented end-to-end |
-| 46 | Docker deployment, GitHub Actions CI and cloud environment config | Implemented; live deployment pending |
+| 46 | Docker deployment, GitHub Actions CI and cloud environment config | Implemented; frontend and backend live on Vercel |
+| 47 | LedgerBot read-only assistant foundation | Day 1 implemented; AI model pending |
 
 ---
 
@@ -2616,7 +2617,7 @@ rg -n 'websocket|socket.io' backend/app frontend/src
 | Vitest/Jest/Supertest | Not used in this project |
 | Playwright | Not implemented yet |
 | GitHub Actions | Backend tests/migrations and frontend checks workflow implemented |
-| Vercel/backend deployment | Not completed yet |
+| Vercel/backend deployment | Frontend and backend deployed on Vercel; Render configuration is an alternative |
 | Explicit CSRF token | Not implemented; SameSite cookie mitigation exists |
 | Full Docker app stack | DB/Redis only; API/frontend images pending |
 
@@ -2842,7 +2843,7 @@ Working locally does not prove deployment readiness. A cloud process must bind t
 
 ### LedgerLite solution
 
-The backend `Dockerfile` installs dependencies and runs `alembic upgrade head` before Uvicorn. Root `render.yaml` describes the Render service, health path and safe defaults. Vercel builds `ledgerlite/frontend` and calls Render through server-only `API_URL`. Neon PostgreSQL and Upstash Redis credentials stay in provider environment variables. GitHub Actions runs backend migrations/tests and frontend typecheck/lint/build.
+The backend `Dockerfile` is a reproducible container deployment option; root `render.yaml` describes an alternative Render configuration. The live frontend and FastAPI backend currently run on Vercel. Next.js calls the backend through server-only `API_URL`. Neon PostgreSQL and Upstash Redis credentials stay in provider environment variables. GitHub Actions runs backend migrations/tests and frontend typecheck/lint/build.
 
 ### Code
 
@@ -2859,7 +2860,7 @@ CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --
 ```
 
 ```text
-Browser -> Vercel Next.js -> Render FastAPI
+Browser -> Vercel Next.js -> Vercel FastAPI
                               |-> Neon PostgreSQL
                               `-> Upstash Redis
 ```
@@ -2867,19 +2868,19 @@ Browser -> Vercel Next.js -> Render FastAPI
 ### Benefits
 
 - A fresh environment reaches the expected schema through migration history.
-- The application uses Render's dynamic `PORT`.
+- The Docker/Render option uses the assigned dynamic `PORT`; Vercel uses its own function runtime.
 - Secrets remain outside the repository and browser bundle.
 - Pull requests catch backend and frontend regressions early.
 - `/health` checks the process and `/health/ready` checks PostgreSQL and Redis.
 
 ### Note
 
-A free Render service sleeps after inactivity, so its first request can be slow. Free tiers suit demos and portfolios, not SLA-backed production. Running migrations in the start command is simple for one portfolio instance; multi-instance production should use a separate release job.
+Render is not the current live host. Free tiers suit demos and portfolios, not SLA-backed production. The current serverless deployment should run migrations as a separate controlled step; the container start command does not run in Vercel functions.
 
 ### Interview questions
 
 **Q1. Why deploy frontend and backend to different providers?**
-Vercel is optimized for Next.js runtime and CDN, while Render can run a long-lived Python ASGI service.
+The current frontend and backend both run on Vercel. The Render configuration remains an alternative for a long-running Python ASGI service.
 
 **Q2. Why bind to `0.0.0.0`?**
 The hosting proxy can reach the process only when it listens on every container interface instead of localhost alone.
@@ -2907,6 +2908,79 @@ Compose runs local PostgreSQL and Redis. Managed Neon and Upstash handle cloud p
 
 **Q10. Why can the first free Render request be slow?**
 An idle free service spins down. The next request starts it again; this is a cold start rather than an application bug.
+
+---
+
+## Skill 47 — LedgerBot read-only assistant foundation
+
+### Define
+
+An assistant foundation is the UI and secure data route that a future AI feature can use to obtain context from the signed-in user's workspace. Today LedgerBot is an animated button and invoice snapshot. It does not yet have an LLM, chat, or agent tool calls.
+
+### Problem
+
+Giving browser code direct access to a FastAPI token or unrestricted accounting data would be unsafe. Calling a decorative button a working AI agent would also be misleading. We first needed an authenticated, read-only request with clear UI states.
+
+### LedgerLite solution
+
+`frontend/src/components/ledgerlite-agent.tsx` renders a transparent floating robot, accessible toggle button, loading state, and error message. `frontend/src/app/layout.tsx` mounts it. `frontend/src/app/api/assistant/context/route.ts` reads the HttpOnly `access_token` cookie on the server and calls FastAPI `/invoices?page=1&size=5`. Only the response's `total` count reaches the UI. The backend's existing authentication and organization-scoped invoice query enforce access control.
+
+### Code
+
+```tsx
+const response = await fetch("/api/assistant/context", { cache: "no-store" });
+setSnapshot(response.ok
+  ? `Your workspace has ${data.invoiceCount ?? 0} invoices.`
+  : (data.detail ?? "Could not load your data."));
+```
+
+```ts
+const token = (await cookies()).get("access_token")?.value;
+if (!token) return NextResponse.json({ detail: "Sign in to use LedgerBot." }, { status: 401 });
+
+const response = await fetch(`${apiUrl}/invoices?page=1&size=5`, {
+  headers: { Authorization: `Bearer ${token}` },
+  cache: "no-store",
+  signal: AbortSignal.timeout(10000),
+});
+```
+
+### Benefits
+
+- Browser JavaScript cannot read the token; the BFF adds the bearer header on the server.
+- Signed-out users receive `401`, and upstream failures become controlled errors.
+- `no-store` prevents private invoice counts from entering a shared or stale cache.
+- The preview uses actual backend data; no financial details are sent to an AI provider.
+
+### Note
+
+The count comes from the paginated endpoint's `total`, not the length of its five recent items. This is not an AI model integration. Day 2 needs tenant-safe context selection, prompt boundaries, cost controls, and answer verification. The assistant cannot execute financial transactions today.
+
+### Interview questions
+
+**Q1. Is LedgerBot already an AI agent?**
+No. Day 1 implements the animated UI and authenticated invoice snapshot. An LLM and tool calls are future steps.
+
+**Q2. Why not call FastAPI `/invoices` directly from the browser?**
+The Next.js BFF reads the HttpOnly cookie and attaches the bearer token on the server, so browser JavaScript never sees it.
+
+**Q3. What happens if a signed-out user clicks the button?**
+The route detects the missing token and returns `401` with a clear sign-in message. We verified this against the live signed-out endpoint.
+
+**Q4. How is tenant data kept separate?**
+FastAPI identifies the user and organization from the JWT and runs the invoice query within that organization. The UI displays only the count from that response.
+
+**Q5. Why use `cache: "no-store"`?**
+Invoice data is private and changes over time. The request and response must avoid stale or shared caching.
+
+**Q6. How do five invoice items produce the total count?**
+The paginated API's `total` describes the complete filtered tenant dataset; `items.length` describes only the current page.
+
+**Q7. What happens when FastAPI is unavailable?**
+The BFF returns a controlled `503` message, and the client displays a retry message instead of crashing the page.
+
+**Q8. Will the future model receive database credentials?**
+No. The server will select the minimum tenant-scoped context needed; provider requests will not contain database credentials or access tokens.
 
 ---
 

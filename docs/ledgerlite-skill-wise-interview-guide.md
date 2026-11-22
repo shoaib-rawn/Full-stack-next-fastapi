@@ -66,7 +66,8 @@ Code ratta nahi karna. Har snippet ki request journey aur decision samajhna hai.
 | 43 | Installed vs actually implemented skills | Honest boundary documented |
 | 44 | Axios typed client, interceptors and refresh retry | Implemented |
 | 45 | Reporting aggregates, invoice filters and Chart.js | Implemented end-to-end |
-| 46 | Docker deployment, GitHub Actions CI and cloud environment config | Implemented; live deployment pending |
+| 46 | Docker deployment, GitHub Actions CI and cloud environment config | Implemented; frontend and backend live on Vercel |
+| 47 | LedgerBot read-only assistant foundation | Day 1 implemented; AI model pending |
 
 ---
 
@@ -2616,7 +2617,7 @@ rg -n 'websocket|socket.io' backend/app frontend/src
 | Vitest/Jest/Supertest | Not used in this project |
 | Playwright | Not implemented yet |
 | GitHub Actions | Backend tests/migrations and frontend checks workflow implemented |
-| Vercel/backend deployment | Not completed yet |
+| Vercel/backend deployment | Frontend and backend deployed on Vercel; Render configuration is an alternative |
 | Explicit CSRF token | Not implemented; SameSite cookie mitigation exists |
 | Full Docker app stack | DB/Redis only; API/frontend images pending |
 
@@ -2842,7 +2843,7 @@ Local machine par chalna production readiness prove nahi karta. Cloud process ko
 
 ### LedgerLite solution
 
-Backend `Dockerfile` dependencies install karke container start par `alembic upgrade head` aur phir Uvicorn chalata hai. Root `render.yaml` Render service, health path aur safe defaults describe karta hai. Vercel `ledgerlite/frontend` build karta hai aur server-only `API_URL` se Render ko call karta hai. Neon PostgreSQL aur Upstash Redis credentials provider environment variables mein rehte hain. GitHub Actions backend migrations/tests aur frontend typecheck/lint/build chalati hai.
+Backend `Dockerfile` container deployment ka reproducible option hai; root `render.yaml` Render ka alternative configuration describe karta hai. Current live frontend aur FastAPI backend Vercel par hain. Next.js server-only `API_URL` se backend ko call karta hai. Neon PostgreSQL aur Upstash Redis credentials provider environment variables mein rehte hain. GitHub Actions backend migrations/tests aur frontend typecheck/lint/build chalati hai.
 
 ### Code
 
@@ -2859,7 +2860,7 @@ CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --
 ```
 
 ```text
-Browser -> Vercel Next.js -> Render FastAPI
+Browser -> Vercel Next.js -> Vercel FastAPI
                               |-> Neon PostgreSQL
                               `-> Upstash Redis
 ```
@@ -2867,19 +2868,19 @@ Browser -> Vercel Next.js -> Render FastAPI
 ### Benefits
 
 - Fresh environment same migration history se database banata hai.
-- Application Render ka dynamic `PORT` use karti hai.
+- Docker/Render option assigned dynamic `PORT` use karta hai; Vercel apna function runtime use karta hai.
 - Secrets repository aur browser bundle se bahar rehte hain.
 - Pull request par backend aur frontend regression jaldi detect hoti hai.
 - `/health` process aur `/health/ready` PostgreSQL/Redis chain verify karte hain.
 
 ### Note
 
-Free Render service idle hone ke baad sleep karti hai, is liye first request slow ho sakti hai. Free tiers demo/portfolio ke liye hain, uptime SLA production ke liye nahi. Single-instance portfolio mein migration start command simple hai; multi-instance production mein migration separate release job honi chahiye.
+Render configuration current live host nahi hai. Free tiers demo/portfolio ke liye hain, uptime SLA production ke liye nahi. Current serverless deployment mein migrations ko separate controlled step mein run karna chahiye; container start command Vercel functions mein nahi chalti.
 
 ### Interview questions
 
 **Q1. Frontend aur backend alag providers par kyun deploy kiye?**
-Vercel Next.js runtime/CDN ke liye optimized hai, jabke Render long-running Python ASGI service chala sakta hai.
+Current deployment mein frontend aur backend dono Vercel par hain. Render configuration ek long-running Python ASGI alternative hai.
 
 **Q2. `0.0.0.0` par bind kyun karte hain?**
 Hosting proxy request tabhi reach karti hai jab server localhost ke bajaye saare container interfaces par listen kare.
@@ -2907,6 +2908,79 @@ Compose local PostgreSQL/Redis chalata hai. Cloud mein managed Neon/Upstash pers
 
 **Q10. Free Render par first request slow kyun ho sakti hai?**
 Idle free service spin down hoti hai. Next request process dobara start karti hai; ye cold start hai, application bug nahi.
+
+---
+
+## Skill 47 — LedgerBot read-only assistant foundation
+
+### Define
+
+Assistant foundation ka matlab UI aur secure data route banana hai jahan se future AI feature user ke apne workspace ka context le sake. Abhi LedgerBot ek animated button aur invoice snapshot hai; is mein LLM, chat ya agent tool-calling nahi hai.
+
+### Problem
+
+Browser ko direct FastAPI token ya unrestricted accounting data dena unsafe hota. Ek AI button ko bina working flow ke “agent” kehna bhi misleading hota. Pehle authenticated, read-only request aur clear UI status chahiye tha.
+
+### LedgerLite solution
+
+`frontend/src/components/ledgerlite-agent.tsx` transparent floating robot, accessible open/close button, loading aur error state banata hai. `frontend/src/app/layout.tsx` ise page par mount karta hai. `frontend/src/app/api/assistant/context/route.ts` server par HttpOnly `access_token` cookie read karke authenticated FastAPI `/invoices?page=1&size=5` call karta hai. Response se sirf `total` count UI ko milta hai. Backend ki existing authentication aur organization-scoped invoice query access control karti hai.
+
+### Code
+
+```tsx
+const response = await fetch("/api/assistant/context", { cache: "no-store" });
+setSnapshot(response.ok
+  ? `Your workspace has ${data.invoiceCount ?? 0} invoices.`
+  : (data.detail ?? "Could not load your data."));
+```
+
+```ts
+const token = (await cookies()).get("access_token")?.value;
+if (!token) return NextResponse.json({ detail: "Sign in to use LedgerBot." }, { status: 401 });
+
+const response = await fetch(`${apiUrl}/invoices?page=1&size=5`, {
+  headers: { Authorization: `Bearer ${token}` },
+  cache: "no-store",
+  signal: AbortSignal.timeout(10000),
+});
+```
+
+### Benefits
+
+- Token browser JavaScript ko nahi milta; BFF server par bearer header lagata hai.
+- Signed-out user ko `401` milta hai; failed upstream request controlled error ban jati hai.
+- `no-store` private invoice count ko shared cache mein nahi rakhta.
+- Preview button real backend data par based hai; financial details kisi AI provider ko nahi bheji ja rahi.
+
+### Note
+
+Count invoices list endpoint ke `total` se aata hai, recent five items ki length se nahi. Ye AI model integration nahi hai. Day 2 mein model connect karte waqt tenant-safe context selection, prompt boundaries, cost control aur answer verification add karne honge. Assistant ko financial transactions khud execute karne ki permission abhi nahi hai.
+
+### Interview questions
+
+**Q1. LedgerBot abhi AI agent hai?**
+Nahi. Day 1 mein animated UI aur authenticated invoice snapshot implement hua hai. LLM aur tool-calling future step hain.
+
+**Q2. Browser seedha FastAPI `/invoices` kyun call nahi karta?**
+Next.js BFF HttpOnly cookie server par read karke bearer token attach karta hai; browser JavaScript ko token nahi milta.
+
+**Q3. Signed-out user button dabaye to kya hota hai?**
+Route token missing dekh kar `401` aur clear sign-in message return karta hai. Live signed-out endpoint par ye verify kiya gaya.
+
+**Q4. Multi-tenant data kaise separate rehta hai?**
+FastAPI JWT se user/organization identify karta hai aur invoices query organization scope mein chalti hai. UI sirf us response ka count dikhati hai.
+
+**Q5. `cache: "no-store"` kyun?**
+Invoice data private aur changeable hai. Request aur response ko stale/shared caching se bachaya jata hai.
+
+**Q6. `/invoices?page=1&size=5` se total count kaise milta hai?**
+Paginated API response ka `total` poore filtered tenant dataset ka count hai; `items.length` sirf current page ke records batata hai.
+
+**Q7. FastAPI unavailable ho to UI kya karti hai?**
+BFF controlled `503` message deta hai; client exception handle karke retry message dikhata hai, page crash nahi hota.
+
+**Q8. Future model ko kya seedha database credentials denge?**
+Nahi. Server tenant-scoped, minimum required context select karega; provider ko database credentials ya access token nahi diya jayega.
 
 ---
 
