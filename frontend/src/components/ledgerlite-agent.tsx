@@ -34,14 +34,18 @@ export function LedgerLiteAgent() {
           <p className="mt-3 rounded-xl bg-[#fff4c8] px-3 py-2 text-xs font-semibold">Preview only · No financial data is sent to an AI model yet.</p>
         </div>
       )}
-      <button type="button" onClick={() => setOpen((value) => !value)} aria-expanded={open} aria-label={open ? "Close LedgerBot" : "Open LedgerBot"} className="group flex items-end gap-2 rounded-2xl bg-[#082d63] p-2 pr-3 text-white shadow-[0_8px_24px_rgba(8,45,99,.3)] transition hover:-translate-y-1 focus-visible:outline-4 focus-visible:outline-[#ffd65a]">
-        <span className="ll-agent-float relative grid h-14 w-14 place-items-center rounded-2xl border-4 border-[#d9edf7] bg-[#182943] shadow-inner" aria-hidden="true">
-          <span className="absolute -top-3 left-1/2 h-2 w-0.5 -translate-x-1/2 bg-[#d9edf7]" />
-          <span className="absolute -top-4 left-1/2 size-1.5 -translate-x-1/2 rounded-full bg-[#ffd65a]" />
-          <span className="flex gap-2"><i className="size-1.5 rounded-full bg-[#26e99c]" /><i className="size-1.5 rounded-full bg-[#26e99c]" /></span>
-          <span className="absolute bottom-2 h-2 w-4 rounded-b-full border-b-4 border-[#26e99c]" />
+      <button type="button" onClick={() => setOpen((value) => !value)} aria-expanded={open} aria-label={open ? "Close LedgerBot" : "Open LedgerBot"} className="group grid size-20 place-items-center rounded-full bg-transparent transition-transform hover:scale-110 focus-visible:outline-4 focus-visible:outline-[#ffd65a]">
+        <span className="ll-agent-float relative block h-[76px] w-[72px] drop-shadow-[0_8px_9px_rgba(4,32,64,.3)]" aria-hidden="true">
+          <span className="absolute left-[35px] top-0 h-3 w-0.5 bg-white" />
+          <span className="absolute left-[33px] top-0 size-1.5 rounded-full bg-[#ffd65a]" />
+          <span className="absolute left-1 top-8 h-7 w-2 -rotate-[30deg] rounded-full bg-white" />
+          <span className="absolute right-1 top-8 h-7 w-2 rotate-[30deg] rounded-full bg-white" />
+          <span className="absolute left-4 top-[42px] h-8 w-10 rounded-b-2xl rounded-t-lg border-2 border-[#cfebf4] bg-white" />
+          <span className="absolute left-[7px] top-2 grid h-[48px] w-[58px] place-items-center rounded-[20px] border-[5px] border-white bg-[#182943] shadow-[inset_0_0_0_2px_#93c7d8]">
+            <span className="absolute top-[18px] flex gap-3"><i className="size-1.5 rounded-full bg-[#26e99c]" /><i className="size-1.5 rounded-full bg-[#26e99c]" /></span>
+            <span className="absolute bottom-[9px] h-2 w-4 rounded-b-full border-b-[3px] border-[#26e99c]" />
+          </span>
         </span>
-        <span className="pb-2 text-left text-xs font-black leading-4">Ask<br />LedgerBot</span>
       </button>
     </aside>
   );
