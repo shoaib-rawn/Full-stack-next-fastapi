@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { QueryProvider } from "@/providers/query-provider";
+import { LedgerLiteAgent } from "@/components/ledgerlite-agent";
 // Absolute base for share links (LinkedIn needs full image URLs). Vercel
 // sets VERCEL_PROJECT_PRODUCTION_URL; locally we fall back to localhost.
 const siteUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
@@ -44,6 +45,7 @@ export default function RootLayout({
     <html lang="en" className="h-full antialiased">
       <body className="flex min-h-full flex-col">
         <QueryProvider>{children}</QueryProvider>
+        <LedgerLiteAgent />
       </body>
     </html>
   );
