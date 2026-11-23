@@ -5,6 +5,7 @@ import { groundLedgerBotAnswer, ledgerBotInstruction } from "@/lib/assistant-gro
 const apiUrl = process.env.API_URL ?? "http://127.0.0.1:8000";
 const provider = process.env.AI_PROVIDER === "vercel" ? "vercel" : "google";
 const gatewayKey = process.env.AI_GATEWAY_API_KEY || process.env.GEMINI_API_KEY;
+const modelTimeoutMs = 30_000;
 
 function reply(detail: string, status: number) {
   return NextResponse.json({ detail }, {
@@ -44,7 +45,7 @@ async function askGoogle(question: string) {
           generationConfig: { temperature: 0.3, maxOutputTokens: 300 },
         }),
         cache: "no-store",
-        signal: AbortSignal.timeout(20000),
+        signal: AbortSignal.timeout(modelTimeoutMs),
       },
     );
     if (!response.ok) {
@@ -66,8 +67,11 @@ async function askGoogle(question: string) {
     const answer = result.candidates?.[0]?.content?.parts?.map((part) => part.text ?? "").join("").trim();
     if (!answer) return reply("AI returned no answer. Please try another question.", 502);
     return NextResponse.json({ answer: groundLedgerBotAnswer(question, answer) }, { headers: { "Cache-Control": "no-store" } });
-  } catch {
-    return reply("AI request timed out. Please try again.", 504);
+  } catch (error) {
+    console.error("ledgerbot.google_request_failed", { reason: error instanceof Error ? error.name : "unknown" });
+    return error instanceof Error && error.name === "TimeoutError"
+      ? reply("Google AI is taking too long. Please try again.", 504)
+      : reply("Could not reach Google AI right now. Please try again.", 502);
   }
 }
 
@@ -89,7 +93,7 @@ async function askVercel(question: string, request: NextRequest) {
         max_tokens: 300,
       }),
       cache: "no-store",
-      signal: AbortSignal.timeout(20000),
+      signal: AbortSignal.timeout(modelTimeoutMs),
     });
     if (!response.ok) {
       const error = await response.json().catch(() => null) as {
@@ -114,8 +118,11 @@ async function askVercel(question: string, request: NextRequest) {
     const answer = result.choices?.[0]?.message?.content?.trim();
     if (!answer) return reply("AI returned no answer. Please try another question.", 502);
     return NextResponse.json({ answer: groundLedgerBotAnswer(question, answer) }, { headers: { "Cache-Control": "no-store" } });
-  } catch {
-    return reply("AI request timed out. Please try again.", 504);
+  } catch (error) {
+    console.error("ledgerbot.gateway_request_failed", { reason: error instanceof Error ? error.name : "unknown" });
+    return error instanceof Error && error.name === "TimeoutError"
+      ? reply("AI Gateway is taking too long. Please try again.", 504)
+      : reply("Could not reach AI Gateway right now. Please try again.", 502);
   }
 }
 
@@ -145,6 +152,13 @@ export async function POST(request: NextRequest) {
     if (!auth.ok) return reply("LedgerBot cannot verify your session right now.", 503);
   } catch {
     return reply("LedgerBot cannot reach the API right now.", 503);
+  }
+
+  if (/^(hi|hii+|hello|hey|hlo|salam|assalam[ -]?o[ -]?alaikum)[!.? ]*$/i.test(question.trim())) {
+    return NextResponse.json(
+      { answer: "Hello! I can help you find your way around LedgerLite. Ask me about Dashboard, customers, invoices, payments, Team, or Settings." },
+      { headers: { "Cache-Control": "no-store" } },
+    );
   }
 
   return provider === "google" ? askGoogle(question.trim()) : askVercel(question.trim(), request);
