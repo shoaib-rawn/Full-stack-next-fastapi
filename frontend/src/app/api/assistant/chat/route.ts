@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 const apiUrl = process.env.API_URL ?? "http://127.0.0.1:8000";
 const model = process.env.AI_GATEWAY_MODEL ?? "google/gemini-3.5-flash-lite";
+const gatewayKey = process.env.AI_GATEWAY_API_KEY || process.env.GEMINI_API_KEY;
 
 function reply(detail: string, status: number) {
   return NextResponse.json({ detail }, {
@@ -13,7 +14,7 @@ function reply(detail: string, status: number) {
 
 export function GET() {
   return NextResponse.json(
-    { available: Boolean(process.env.AI_GATEWAY_API_KEY) },
+    { available: Boolean(gatewayKey) },
     { headers: { "Cache-Control": "no-store" } },
   );
 }
@@ -47,7 +48,7 @@ export async function POST(request: NextRequest) {
     return reply("LedgerBot cannot reach the API right now.", 503);
   }
 
-  const key = process.env.AI_GATEWAY_API_KEY;
+  const key = gatewayKey;
   if (!key) return reply("AI is not configured yet. Please try the invoice snapshot for now.", 503);
 
   try {

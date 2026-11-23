@@ -3028,7 +3028,7 @@ await fetch("https://ai-gateway.vercel.sh/v1/chat/completions", {
 
 ### Note
 
-Vercel AI Gateway key ko frontend project mein `AI_GATEWAY_API_KEY` ke naam se add karke redeploy karna hoga. Gateway par free monthly credit aur model pricing account ke mutabiq change ho sakti hai. Jab tak key nahi hoti chat form hidden rehta hai aur route `503` deta hai. AI answer advice hai, accounting source of truth nahi. User apne prompt mein private information likh sakta hai, is liye UI us se bachne ko kehti hai. Day 3 mein approved tenant-scoped context aur tool design decide hoga.
+Vercel AI Gateway key ka preferred env name `AI_GATEWAY_API_KEY` hai. Existing Vercel setup mein `GEMINI_API_KEY` naam se saved Vercel Gateway key bhi accept hoti hai; ye sirf compatibility alias hai, Google API endpoint use nahi hota. Gateway par free monthly credit aur model pricing account ke mutabiq change ho sakti hai. Jab tak key nahi hoti chat form hidden rehta hai aur route `503` deta hai. AI answer advice hai, accounting source of truth nahi. User apne prompt mein private information likh sakta hai, is liye UI us se bachne ko kehti hai. Day 3 mein approved tenant-scoped context aur tool design decide hoga.
 
 ### Interview questions
 
