@@ -3028,7 +3028,7 @@ await fetch("https://ai-gateway.vercel.sh/v1/chat/completions", {
 
 ### Note
 
-The preferred Vercel AI Gateway key name is `AI_GATEWAY_API_KEY`. The Vercel Gateway key already saved under `GEMINI_API_KEY` is also accepted as a compatibility alias; it does not call Google's API directly. Monthly free credit and model pricing may change. Until a key exists, the chat form stays hidden and the route returns `503`. AI answers are guidance, not accounting source of truth. Users can include private details in their own prompts, so the UI advises against doing so. Day 3 will decide the approved tenant-scoped context and tool design.
+When a Vercel function receives an OIDC token, LedgerBot prefers that short-lived token. For local or non-OIDC environments, the preferred key name is `AI_GATEWAY_API_KEY`. The Vercel Gateway key already saved under `GEMINI_API_KEY` is also accepted as a compatibility alias; it does not call Google's API directly. Monthly free credit and model pricing may change. Until either OIDC or a key exists, the chat form stays hidden and the route returns `503`. AI answers are guidance, not accounting source of truth. Users can include private details in their own prompts, so the UI advises against doing so. Day 3 will decide the approved tenant-scoped context and tool design.
 
 ### Interview questions
 

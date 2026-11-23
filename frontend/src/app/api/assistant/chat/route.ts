@@ -12,9 +12,14 @@ function reply(detail: string, status: number) {
   });
 }
 
-export function GET() {
+function oidcToken(request: NextRequest) {
+  return request.headers.get("x-vercel-oidc-token") || process.env.VERCEL_OIDC_TOKEN;
+}
+
+export function GET(request: NextRequest) {
+  const oidc = oidcToken(request);
   return NextResponse.json(
-    { available: Boolean(gatewayKey) },
+    { available: Boolean(oidc || gatewayKey), authMode: oidc ? "oidc" : gatewayKey ? "key" : "none" },
     { headers: { "Cache-Control": "no-store" } },
   );
 }
@@ -48,7 +53,7 @@ export async function POST(request: NextRequest) {
     return reply("LedgerBot cannot reach the API right now.", 503);
   }
 
-  const key = gatewayKey;
+  const key = oidcToken(request) || gatewayKey;
   if (!key) return reply("AI is not configured yet. Please try the invoice snapshot for now.", 503);
 
   try {
