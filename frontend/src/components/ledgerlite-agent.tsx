@@ -1,15 +1,29 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
+
+type ChatMessage = { id: number; role: "user" | "assistant"; text: string };
 
 export function LedgerLiteAgent() {
   const [open, setOpen] = useState(false);
   const [snapshot, setSnapshot] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [question, setQuestion] = useState("");
-  const [answer, setAnswer] = useState<string | null>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [asking, setAsking] = useState(false);
   const [aiReady, setAiReady] = useState<boolean | null>(null);
+  const chatList = useRef<HTMLDivElement>(null);
+  const nextMessageId = useRef(0);
+
+  function addMessage(role: ChatMessage["role"], text: string) {
+    setMessages((current) => [...current, { id: ++nextMessageId.current, role, text }]);
+  }
+
+  useEffect(() => {
+    if (open && messages.length && chatList.current) {
+      chatList.current.scrollTo({ top: chatList.current.scrollHeight, behavior: "smooth" });
+    }
+  }, [messages, open]);
 
   useEffect(() => {
     if (!open) return;
@@ -26,7 +40,8 @@ export function LedgerLiteAgent() {
     const prompt = question.trim();
     if (prompt.length < 2 || asking) return;
     setAsking(true);
-    setAnswer(null);
+    addMessage("user", prompt);
+    setQuestion("");
     try {
       const response = await fetch("/api/assistant/chat", {
         method: "POST",
@@ -34,9 +49,9 @@ export function LedgerLiteAgent() {
         body: JSON.stringify({ question: prompt }),
       });
       const data = await response.json() as { answer?: string; detail?: string };
-      setAnswer(response.ok ? (data.answer ?? "No answer returned.") : (data.detail ?? "Could not answer right now."));
+      addMessage("assistant", response.ok ? (data.answer ?? "No answer returned.") : (data.detail ?? "Could not answer right now."));
     } catch {
-      setAnswer("Could not connect. Please try again.");
+      addMessage("assistant", "Could not connect. Please try again.");
     } finally {
       setAsking(false);
     }
@@ -63,14 +78,19 @@ export function LedgerLiteAgent() {
             <strong className="text-lg">Meet LedgerBot</strong>
             <button type="button" onClick={() => setOpen(false)} aria-label="Close assistant" className="grid size-8 place-items-center rounded-full bg-[#e5f6ff] text-xl">×</button>
           </div>
-          <p className="mt-2 text-sm leading-6 text-[#58718c]">{aiReady ? "Ask about customers, invoices, payments, and reports." : "Your LedgerLite helper."}</p>
+          <p className="mt-2 text-sm leading-6 text-[#58718c]">{aiReady ? "Ask about Dashboard, customers, invoices, and payments." : "Your LedgerLite helper."}</p>
           {aiReady === false && <p className="mt-3 rounded-xl bg-[#fff4c8] p-3 text-sm font-semibold">AI chat is being connected. The invoice snapshot is available below.</p>}
+          {aiReady && messages.length > 0 && <div ref={chatList} className="mt-4 flex max-h-64 flex-col gap-3 overflow-y-auto rounded-2xl bg-[#f4f9fd] p-3" role="log" aria-label="LedgerBot conversation" aria-live="polite">
+            {messages.map((message) => <div key={message.id} className={`max-w-[90%] whitespace-pre-wrap break-words rounded-2xl px-3 py-2 text-sm leading-6 ${message.role === "user" ? "self-end rounded-br-sm bg-[#1267c9] text-white" : "self-start rounded-bl-sm bg-white text-[#082d63] shadow-sm"}`}>
+              {message.text}
+            </div>)}
+            {asking && <div className="self-start rounded-2xl bg-white px-3 py-2 text-sm text-[#58718c]">LedgerBot is thinking...</div>}
+          </div>}
           {aiReady && <form onSubmit={askLedgerBot} className="mt-4 space-y-2">
-            <label htmlFor="ledgerbot-question" className="text-sm font-bold">Your question</label>
-            <textarea id="ledgerbot-question" value={question} onChange={(event) => setQuestion(event.target.value)} maxLength={500} rows={3} placeholder="How do I create an invoice?" className="w-full resize-none rounded-xl border border-[#a7cde2] p-3 text-sm outline-none focus:border-[#1267c9]" />
-            <button type="submit" disabled={asking || question.trim().length < 2} className="rounded-xl bg-[#1267c9] px-4 py-2 text-sm font-bold text-white disabled:opacity-60">{asking ? "Thinking..." : "Ask LedgerBot"}</button>
+            <label htmlFor="ledgerbot-question" className="text-sm font-bold">Your message</label>
+            <textarea id="ledgerbot-question" value={question} onChange={(event) => setQuestion(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); event.currentTarget.form?.requestSubmit(); } }} maxLength={500} rows={2} placeholder="Ask LedgerBot..." className="w-full resize-none rounded-xl border border-[#a7cde2] p-3 text-sm outline-none focus:border-[#1267c9]" />
+            <button type="submit" disabled={asking || question.trim().length < 2} className="rounded-xl bg-[#1267c9] px-4 py-2 text-sm font-bold text-white disabled:opacity-60">{asking ? "Thinking..." : "Send"}</button>
           </form>}
-          {answer && <p className="mt-3 whitespace-pre-wrap rounded-xl bg-[#eaf4ff] p-3 text-sm leading-6" role="status">{answer}</p>}
           {aiReady && <p className="mt-4 text-xs font-semibold text-[#58718c]">AI answers explain the app; they do not read or change your records. Avoid private details in questions.</p>}
           <button type="button" onClick={loadSnapshot} disabled={loading} className="mt-3 rounded-xl bg-[#082d63] px-4 py-2 text-sm font-bold text-white disabled:opacity-60">{loading ? "Loading..." : "Show my invoice snapshot"}</button>
           {snapshot && <p className="mt-3 rounded-xl bg-[#e5f6ff] p-3 text-sm font-semibold" role="status">{snapshot}</p>}
