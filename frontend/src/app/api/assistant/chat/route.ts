@@ -67,8 +67,24 @@ export async function POST(request: NextRequest) {
         cache: "no-store",
         signal: AbortSignal.timeout(20000),
       });
-    if (response.status === 429) return reply("AI is busy. Please try again shortly.", 429);
-    if (!response.ok) return reply("AI could not answer right now.", 502);
+    if (!response.ok) {
+      const error = await response.json().catch(() => null) as {
+        error?: { code?: unknown; type?: unknown };
+      } | null;
+      const code = typeof error?.error?.code === "string" ? error.error.code.slice(0, 80) : "unknown";
+      const type = typeof error?.error?.type === "string" ? error.error.type.slice(0, 80) : "unknown";
+      console.error("ledgerbot.gateway_rejected", { status: response.status, code, type });
+
+      const details: Record<number, string> = {
+        400: "AI Gateway rejected the model request (400).",
+        401: "AI Gateway rejected its API key (401).",
+        402: "AI Gateway has no available credits (402).",
+        403: "AI Gateway access was denied (403).",
+        404: "The selected AI model is unavailable (404).",
+        429: "AI is busy. Please try again shortly (429).",
+      };
+      return reply(details[response.status] ?? `AI Gateway error (${response.status}).`, response.status === 429 ? 429 : 502);
+    }
 
     const result = await response.json() as { choices?: { message?: { content?: string | null } }[] };
     const answer = result.choices?.[0]?.message?.content?.trim();
