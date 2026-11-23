@@ -1,10 +1,10 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
+import { groundLedgerBotAnswer, ledgerBotInstruction } from "@/lib/assistant-grounding";
 
 const apiUrl = process.env.API_URL ?? "http://127.0.0.1:8000";
 const provider = process.env.AI_PROVIDER === "vercel" ? "vercel" : "google";
 const gatewayKey = process.env.AI_GATEWAY_API_KEY || process.env.GEMINI_API_KEY;
-const instruction = "You are LedgerBot, a concise help assistant for LedgerLite, a multi-tenant accounting app. Help users understand customers, invoices, payments, reports, and app navigation. Do not claim to have accessed their records. No account data is supplied. Do not invent balances or transaction results. Never ask for passwords or API keys. If asked to change records, explain the relevant screen; you cannot execute changes. Keep the answer under 120 words.";
 
 function reply(detail: string, status: number) {
   return NextResponse.json({ detail }, {
@@ -39,7 +39,7 @@ async function askGoogle(question: string) {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-goog-api-key": key },
         body: JSON.stringify({
-          systemInstruction: { parts: [{ text: instruction }] },
+          systemInstruction: { parts: [{ text: ledgerBotInstruction }] },
           contents: [{ role: "user", parts: [{ text: question }] }],
           generationConfig: { temperature: 0.3, maxOutputTokens: 300 },
         }),
@@ -65,7 +65,7 @@ async function askGoogle(question: string) {
     };
     const answer = result.candidates?.[0]?.content?.parts?.map((part) => part.text ?? "").join("").trim();
     if (!answer) return reply("AI returned no answer. Please try another question.", 502);
-    return NextResponse.json({ answer }, { headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json({ answer: groundLedgerBotAnswer(question, answer) }, { headers: { "Cache-Control": "no-store" } });
   } catch {
     return reply("AI request timed out. Please try again.", 504);
   }
@@ -82,7 +82,7 @@ async function askVercel(question: string, request: NextRequest) {
       body: JSON.stringify({
         model: process.env.AI_GATEWAY_MODEL ?? "google/gemini-3.5-flash-lite",
         messages: [
-          { role: "system", content: instruction },
+          { role: "system", content: ledgerBotInstruction },
           { role: "user", content: question },
         ],
         temperature: 0.3,
@@ -113,7 +113,7 @@ async function askVercel(question: string, request: NextRequest) {
     const result = await response.json() as { choices?: { message?: { content?: string | null } }[] };
     const answer = result.choices?.[0]?.message?.content?.trim();
     if (!answer) return reply("AI returned no answer. Please try another question.", 502);
-    return NextResponse.json({ answer }, { headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json({ answer: groundLedgerBotAnswer(question, answer) }, { headers: { "Cache-Control": "no-store" } });
   } catch {
     return reply("AI request timed out. Please try again.", 504);
   }
