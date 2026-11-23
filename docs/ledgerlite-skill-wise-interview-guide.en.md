@@ -67,7 +67,8 @@ Do not memorize code. Understand the request journey and the decision behind eac
 | 44 | Axios typed client, interceptors and refresh retry | Implemented |
 | 45 | Reporting aggregates, invoice filters and Chart.js | Implemented end-to-end |
 | 46 | Docker deployment, GitHub Actions CI and cloud environment config | Implemented; frontend and backend live on Vercel |
-| 47 | LedgerBot read-only assistant foundation | Day 1 implemented; AI model pending |
+| 47 | LedgerBot read-only assistant foundation | Day 1 implemented; model call covered in Skill 48 |
+| 48 | LedgerBot model call and prompt boundary | Day 2 code implemented; live model call requires API key |
 
 ---
 
@@ -2981,6 +2982,73 @@ The BFF returns a controlled `503` message, and the client displays a retry mess
 
 **Q8. Will the future model receive database credentials?**
 No. The server will select the minimum tenant-scoped context needed; provider requests will not contain database credentials or access tokens.
+
+---
+
+## Skill 48 — LedgerBot model call and prompt boundary
+
+### Define
+
+An LLM integration sends a user's question from the server to a model API and displays its answer. A prompt boundary tells the model its limited role in the app. This is a model call, not yet an autonomous agent or database tool-calling.
+
+### Problem
+
+Putting a model API key in the browser would expose it. An unauthenticated endpoint would let anyone consume the model quota. Without input limits or a prompt boundary, irrelevant or risky answers become more likely.
+
+### LedgerLite solution
+
+`frontend/src/components/ledgerlite-agent.tsx` implements a question form and loading, answer, and error states. `frontend/src/app/api/assistant/chat/route.ts` first verifies the HttpOnly cookie through FastAPI `/auth/me`, then sends a 2–500 character question to Gemini `generateContent` from the server. `GEMINI_API_KEY` is server-only. No invoice, payment, tenant ID, token, or database record is sent to the model. The separate read-only snapshot endpoint stays in place.
+
+### Code
+
+```ts
+const token = (await cookies()).get("access_token")?.value;
+if (!token) return reply("Sign in to ask LedgerBot.", 401);
+const auth = await fetch(`${apiUrl}/auth/me`, {
+  headers: { Authorization: `Bearer ${token}` },
+  cache: "no-store",
+});
+if (!auth.ok) return reply("Session expired. Please sign in again.", 401);
+```
+
+```ts
+await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+  body: JSON.stringify({ systemInstruction, contents, generationConfig }),
+});
+```
+
+### Benefits
+
+- Neither the model key nor the session token enters the browser bundle.
+- The live session check blocks expired or revoked tokens before a model request.
+- Input length, output token limit, and timeout help control quota and cost.
+- The UI shows clear messages for 401, 429, and provider failures.
+
+### Note
+
+Add a Google AI Studio key named `GEMINI_API_KEY` to the Vercel frontend project and redeploy. Free tier availability and model access vary by account. Until a key exists, the route returns `503`. AI answers are guidance, not accounting source of truth. Users can include private details in their own prompts, so the UI should advise against doing so. Day 3 will decide the approved tenant-scoped context and tool design.
+
+### Interview questions
+
+**Q1. Why not use `NEXT_PUBLIC_` for the API key?**
+`NEXT_PUBLIC_` values may enter the browser bundle. The model key is read only by the server route.
+
+**Q2. Why call `/auth/me` after finding a cookie?**
+The cookie may contain an expired, revoked, or invalid token. The backend verifies the current session.
+
+**Q3. What data is sent to the model?**
+Only the typed question and app-help system instruction. No financial records or credentials.
+
+**Q4. What does the prompt boundary guarantee?**
+It guides behavior but offers no mathematical guarantee. Sensitive actions must be enforced by server authorization.
+
+**Q5. What happens on rate limit or timeout?**
+A provider `429` becomes a retry message; a timeout becomes a controlled `504`. The UI does not crash.
+
+**Q6. Why is this not an autonomous agent?**
+It is one model call without tools, a planning loop, or permission to modify records.
 
 ---
 

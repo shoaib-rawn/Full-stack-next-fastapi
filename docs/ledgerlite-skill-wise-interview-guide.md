@@ -67,7 +67,8 @@ Code ratta nahi karna. Har snippet ki request journey aur decision samajhna hai.
 | 44 | Axios typed client, interceptors and refresh retry | Implemented |
 | 45 | Reporting aggregates, invoice filters and Chart.js | Implemented end-to-end |
 | 46 | Docker deployment, GitHub Actions CI and cloud environment config | Implemented; frontend and backend live on Vercel |
-| 47 | LedgerBot read-only assistant foundation | Day 1 implemented; AI model pending |
+| 47 | LedgerBot read-only assistant foundation | Day 1 implemented; model call covered in Skill 48 |
+| 48 | LedgerBot model call and prompt boundary | Day 2 code implemented; live model call requires API key |
 
 ---
 
@@ -2981,6 +2982,73 @@ BFF controlled `503` message deta hai; client exception handle karke retry messa
 
 **Q8. Future model ko kya seedha database credentials denge?**
 Nahi. Server tenant-scoped, minimum required context select karega; provider ko database credentials ya access token nahi diya jayega.
+
+---
+
+## Skill 48 — LedgerBot model call and prompt boundary
+
+### Define
+
+LLM integration mein server user ka sawal model API ko bhejta hai aur jawab UI mein dikhata hai. Prompt boundary model ko app ka limited role batati hai. Ye model call hai; autonomous agent ya database tool-calling abhi nahi.
+
+### Problem
+
+Browser mein API key rakhne se key leak ho sakti thi. Bina session check ke public endpoint par koi bhi model requests bhej kar quota use kar sakta tha. Bina input limit aur prompt boundary ke irrelevant ya risky answers ka chance tha.
+
+### LedgerLite solution
+
+`frontend/src/components/ledgerlite-agent.tsx` question form, loading aur answer/error states rakhta hai. `frontend/src/app/api/assistant/chat/route.ts` pehle HttpOnly cookie aur FastAPI `/auth/me` se current session verify karta hai, phir 2–500 character question Gemini `generateContent` API ko server se bhejta hai. `GEMINI_API_KEY` server-only env var hai. Model ko koi invoice, payment, tenant ID, token ya database record nahi bheja jata. Snapshot ka separate read-only endpoint pehle jaisa rehta hai.
+
+### Code
+
+```ts
+const token = (await cookies()).get("access_token")?.value;
+if (!token) return reply("Sign in to ask LedgerBot.", 401);
+const auth = await fetch(`${apiUrl}/auth/me`, {
+  headers: { Authorization: `Bearer ${token}` },
+  cache: "no-store",
+});
+if (!auth.ok) return reply("Session expired. Please sign in again.", 401);
+```
+
+```ts
+await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+  body: JSON.stringify({ systemInstruction, contents, generationConfig }),
+});
+```
+
+### Benefits
+
+- API key aur session token browser bundle mein expose nahi hote.
+- Live session check expired/revoked token ko model request se pehle rokta hai.
+- Input length, output token limit aur timeout quota/cost control mein madad karte hain.
+- UI 401, 429 aur provider failure ko clear message mein dikhati hai.
+
+### Note
+
+Google AI Studio key ko Vercel frontend project mein `GEMINI_API_KEY` ke naam se add karke redeploy karna hoga. Free tier availability aur model access account ke mutabiq change ho sakti hai. Jab tak key nahi hoti route `503` deta hai. AI answer advice hai, accounting source of truth nahi. User apne prompt mein private information likh sakta hai, is liye UI mein us se bachne ki guidance deni chahiye. Day 3 mein approved tenant-scoped context aur tool design decide hoga.
+
+### Interview questions
+
+**Q1. API key `NEXT_PUBLIC_` kyun nahi?**
+`NEXT_PUBLIC_` env var browser bundle mein aa sakta hai. Model key sirf server route mein read hoti hai.
+
+**Q2. Cookie present hone ke baad `/auth/me` kyun call karte hain?**
+Cookie mein expired, revoked ya invalid token bhi ho sakta hai. Backend current session verify karta hai.
+
+**Q3. Model ko kaunsa data bheja jata hai?**
+Abhi sirf user ka typed question aur app-help system instruction. Financial records aur credentials nahi.
+
+**Q4. Prompt boundary kya guarantee karti hai?**
+Model ko expected behavior batati hai, magar mathematically guarantee nahi deti. Sensitive actions server authorization se enforce karne honge.
+
+**Q5. Rate limit ya timeout par kya hota hai?**
+Provider `429` par retry message; timeout par controlled `504`. UI crash nahi hoti.
+
+**Q6. Isay autonomous agent kyun nahi kehte?**
+Ye single model call hai. Is ke paas tools, planning loop, ya records change karne ki capability nahi.
 
 ---
 
