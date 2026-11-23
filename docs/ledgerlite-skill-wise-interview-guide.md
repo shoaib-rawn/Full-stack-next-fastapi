@@ -68,7 +68,7 @@ Code ratta nahi karna. Har snippet ki request journey aur decision samajhna hai.
 | 45 | Reporting aggregates, invoice filters and Chart.js | Implemented end-to-end |
 | 46 | Docker deployment, GitHub Actions CI and cloud environment config | Implemented; frontend and backend live on Vercel |
 | 47 | LedgerBot read-only assistant foundation | Day 1 implemented; model call covered in Skill 48 |
-| 48 | LedgerBot model call and prompt boundary | Day 2 code implemented; live model call requires API key |
+| 48 | LedgerBot model call and prompt boundary | Day 2 code implemented; Google AI Studio key pending |
 
 ---
 
@@ -2997,7 +2997,7 @@ Browser mein API key rakhne se key leak ho sakti thi. Bina session check ke publ
 
 ### LedgerLite solution
 
-`frontend/src/components/ledgerlite-agent.tsx` question form, loading aur answer/error states rakhta hai. `frontend/src/app/api/assistant/chat/route.ts` pehle HttpOnly cookie aur FastAPI `/auth/me` se current session verify karta hai, phir 2–500 character question Vercel AI Gateway ke Chat Completions endpoint ko server se bhejta hai. `AI_GATEWAY_API_KEY` server-only env var hai aur default model `google/gemini-3.5-flash-lite` hai. Model ko koi invoice, payment, tenant ID, token ya database record nahi bheja jata. Snapshot ka separate read-only endpoint pehle jaisa rehta hai.
+`frontend/src/components/ledgerlite-agent.tsx` question form, loading aur answer/error states rakhta hai. `frontend/src/app/api/assistant/chat/route.ts` pehle HttpOnly cookie aur FastAPI `/auth/me` se current session verify karta hai, phir 2–500 character question server se Gemini API ko bhejta hai. Default provider Google AI Studio hai; server-only `GOOGLE_GEMINI_API_KEY` chahiye. Vercel AI Gateway `AI_PROVIDER=vercel` se optional hai. Model ko koi invoice, payment, tenant ID, token ya database record nahi bheja jata. Snapshot ka separate read-only endpoint pehle jaisa rehta hai.
 
 ### Code
 
@@ -3012,10 +3012,10 @@ if (!auth.ok) return reply("Session expired. Please sign in again.", 401);
 ```
 
 ```ts
-await fetch("https://ai-gateway.vercel.sh/v1/chat/completions", {
+await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
   method: "POST",
-  headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
-  body: JSON.stringify({ model, messages, max_tokens: 300 }),
+  headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+  body: JSON.stringify({ systemInstruction, contents, generationConfig }),
 });
 ```
 
@@ -3028,7 +3028,9 @@ await fetch("https://ai-gateway.vercel.sh/v1/chat/completions", {
 
 ### Note
 
-Vercel function mein OIDC token available ho to LedgerBot us short-lived token ko prefer karta hai. Local ya non-OIDC environment mein preferred env name `AI_GATEWAY_API_KEY` hai. Existing Vercel setup mein `GEMINI_API_KEY` naam se saved Vercel Gateway key bhi accept hoti hai; ye sirf compatibility alias hai, Google API endpoint use nahi hota. Gateway par free monthly credit aur model pricing account ke mutabiq change ho sakti hai. Jab OIDC aur key dono nahi hote chat form hidden rehta hai aur route `503` deta hai. AI answer advice hai, accounting source of truth nahi. User apne prompt mein private information likh sakta hai, is liye UI us se bachne ko kehti hai. Day 3 mein approved tenant-scoped context aur tool design decide hoga.
+Google AI Studio key ko Vercel frontend project mein `GOOGLE_GEMINI_API_KEY` ke naam se save karna hoga. Existing `GEMINI_API_KEY` Vercel Gateway key hai, Google key nahi. Google free-tier limits aur data terms apply hoti hain. Jab selected provider ki key nahi hoti chat form hidden rehta hai aur route `503` deta hai. AI answer advice hai, accounting source of truth nahi. User apne prompt mein private information likh sakta hai, is liye UI us se bachne ko kehti hai. Day 3 mein approved tenant-scoped context aur tool design decide hoga.
+
+Live Vercel Gateway ne `403 customer_verification_required` diya. Is liye user ke choice par default direct Google AI Studio provider hai; Gateway code `AI_PROVIDER=vercel` par hi use hota hai. Ye app-level provider switch hai, authentication/tenant checks dono paths par same rehte hain.
 
 ### Interview questions
 

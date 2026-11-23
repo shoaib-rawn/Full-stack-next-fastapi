@@ -68,7 +68,7 @@ Do not memorize code. Understand the request journey and the decision behind eac
 | 45 | Reporting aggregates, invoice filters and Chart.js | Implemented end-to-end |
 | 46 | Docker deployment, GitHub Actions CI and cloud environment config | Implemented; frontend and backend live on Vercel |
 | 47 | LedgerBot read-only assistant foundation | Day 1 implemented; model call covered in Skill 48 |
-| 48 | LedgerBot model call and prompt boundary | Day 2 code implemented; live model call requires API key |
+| 48 | LedgerBot model call and prompt boundary | Day 2 code implemented; Google AI Studio key pending |
 
 ---
 
@@ -2997,7 +2997,7 @@ Putting a model API key in the browser would expose it. An unauthenticated endpo
 
 ### LedgerLite solution
 
-`frontend/src/components/ledgerlite-agent.tsx` implements a question form and loading, answer, and error states. `frontend/src/app/api/assistant/chat/route.ts` first verifies the HttpOnly cookie through FastAPI `/auth/me`, then sends a 2–500 character question to Vercel AI Gateway's Chat Completions endpoint from the server. `AI_GATEWAY_API_KEY` is server-only, and the default model is `google/gemini-3.5-flash-lite`. No invoice, payment, tenant ID, token, or database record is sent to the model. The separate read-only snapshot endpoint stays in place.
+`frontend/src/components/ledgerlite-agent.tsx` implements a question form and loading, answer, and error states. `frontend/src/app/api/assistant/chat/route.ts` first verifies the HttpOnly cookie through FastAPI `/auth/me`, then sends a 2–500 character question to the Gemini API from the server. Google AI Studio is the default provider and requires server-only `GOOGLE_GEMINI_API_KEY`. Vercel AI Gateway remains optional with `AI_PROVIDER=vercel`. No invoice, payment, tenant ID, token, or database record is sent to the model. The separate read-only snapshot endpoint stays in place.
 
 ### Code
 
@@ -3012,10 +3012,10 @@ if (!auth.ok) return reply("Session expired. Please sign in again.", 401);
 ```
 
 ```ts
-await fetch("https://ai-gateway.vercel.sh/v1/chat/completions", {
+await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
   method: "POST",
-  headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
-  body: JSON.stringify({ model, messages, max_tokens: 300 }),
+  headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+  body: JSON.stringify({ systemInstruction, contents, generationConfig }),
 });
 ```
 
@@ -3028,7 +3028,9 @@ await fetch("https://ai-gateway.vercel.sh/v1/chat/completions", {
 
 ### Note
 
-When a Vercel function receives an OIDC token, LedgerBot prefers that short-lived token. For local or non-OIDC environments, the preferred key name is `AI_GATEWAY_API_KEY`. The Vercel Gateway key already saved under `GEMINI_API_KEY` is also accepted as a compatibility alias; it does not call Google's API directly. Monthly free credit and model pricing may change. Until either OIDC or a key exists, the chat form stays hidden and the route returns `503`. AI answers are guidance, not accounting source of truth. Users can include private details in their own prompts, so the UI advises against doing so. Day 3 will decide the approved tenant-scoped context and tool design.
+Save the Google AI Studio key to the Vercel frontend project as `GOOGLE_GEMINI_API_KEY`. The existing `GEMINI_API_KEY` is a Vercel Gateway key, not a Google key. Google's free-tier limits and data terms apply. Until the selected provider has a key, the chat form stays hidden and the route returns `503`. AI answers are guidance, not accounting source of truth. Users can include private details in their own prompts, so the UI advises against doing so. Day 3 will decide the approved tenant-scoped context and tool design.
+
+The live Vercel Gateway returned `403 customer_verification_required`. At the user's choice, direct Google AI Studio is now the default; Gateway code runs only with `AI_PROVIDER=vercel`. Both paths use the same session and tenant checks.
 
 ### Interview questions
 
