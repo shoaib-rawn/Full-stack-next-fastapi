@@ -2997,7 +2997,7 @@ Putting a model API key in the browser would expose it. An unauthenticated endpo
 
 ### LedgerLite solution
 
-`frontend/src/components/ledgerlite-agent.tsx` implements a question form and loading, answer, and error states. `frontend/src/app/api/assistant/chat/route.ts` first verifies the HttpOnly cookie through FastAPI `/auth/me`, then sends a 2–500 character question to Gemini `generateContent` from the server. `GEMINI_API_KEY` is server-only. No invoice, payment, tenant ID, token, or database record is sent to the model. The separate read-only snapshot endpoint stays in place.
+`frontend/src/components/ledgerlite-agent.tsx` implements a question form and loading, answer, and error states. `frontend/src/app/api/assistant/chat/route.ts` first verifies the HttpOnly cookie through FastAPI `/auth/me`, then sends a 2–500 character question to Vercel AI Gateway's Chat Completions endpoint from the server. `AI_GATEWAY_API_KEY` is server-only, and the default model is `google/gemini-3.5-flash-lite`. No invoice, payment, tenant ID, token, or database record is sent to the model. The separate read-only snapshot endpoint stays in place.
 
 ### Code
 
@@ -3012,10 +3012,10 @@ if (!auth.ok) return reply("Session expired. Please sign in again.", 401);
 ```
 
 ```ts
-await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+await fetch("https://ai-gateway.vercel.sh/v1/chat/completions", {
   method: "POST",
-  headers: { "Content-Type": "application/json", "x-goog-api-key": key },
-  body: JSON.stringify({ systemInstruction, contents, generationConfig }),
+  headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+  body: JSON.stringify({ model, messages, max_tokens: 300 }),
 });
 ```
 
@@ -3028,7 +3028,7 @@ await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:ge
 
 ### Note
 
-Add a Google AI Studio key named `GEMINI_API_KEY` to the Vercel frontend project and redeploy. Free tier availability and model access vary by account. Until a key exists, the route returns `503`. AI answers are guidance, not accounting source of truth. Users can include private details in their own prompts, so the UI should advise against doing so. Day 3 will decide the approved tenant-scoped context and tool design.
+Add a Vercel AI Gateway key named `AI_GATEWAY_API_KEY` to the Vercel frontend project and redeploy. Monthly free credit and model pricing may change. Until a key exists, the chat form stays hidden and the route returns `503`. AI answers are guidance, not accounting source of truth. Users can include private details in their own prompts, so the UI advises against doing so. Day 3 will decide the approved tenant-scoped context and tool design.
 
 ### Interview questions
 

@@ -2997,7 +2997,7 @@ Browser mein API key rakhne se key leak ho sakti thi. Bina session check ke publ
 
 ### LedgerLite solution
 
-`frontend/src/components/ledgerlite-agent.tsx` question form, loading aur answer/error states rakhta hai. `frontend/src/app/api/assistant/chat/route.ts` pehle HttpOnly cookie aur FastAPI `/auth/me` se current session verify karta hai, phir 2–500 character question Gemini `generateContent` API ko server se bhejta hai. `GEMINI_API_KEY` server-only env var hai. Model ko koi invoice, payment, tenant ID, token ya database record nahi bheja jata. Snapshot ka separate read-only endpoint pehle jaisa rehta hai.
+`frontend/src/components/ledgerlite-agent.tsx` question form, loading aur answer/error states rakhta hai. `frontend/src/app/api/assistant/chat/route.ts` pehle HttpOnly cookie aur FastAPI `/auth/me` se current session verify karta hai, phir 2–500 character question Vercel AI Gateway ke Chat Completions endpoint ko server se bhejta hai. `AI_GATEWAY_API_KEY` server-only env var hai aur default model `google/gemini-3.5-flash-lite` hai. Model ko koi invoice, payment, tenant ID, token ya database record nahi bheja jata. Snapshot ka separate read-only endpoint pehle jaisa rehta hai.
 
 ### Code
 
@@ -3012,10 +3012,10 @@ if (!auth.ok) return reply("Session expired. Please sign in again.", 401);
 ```
 
 ```ts
-await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+await fetch("https://ai-gateway.vercel.sh/v1/chat/completions", {
   method: "POST",
-  headers: { "Content-Type": "application/json", "x-goog-api-key": key },
-  body: JSON.stringify({ systemInstruction, contents, generationConfig }),
+  headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+  body: JSON.stringify({ model, messages, max_tokens: 300 }),
 });
 ```
 
@@ -3028,7 +3028,7 @@ await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:ge
 
 ### Note
 
-Google AI Studio key ko Vercel frontend project mein `GEMINI_API_KEY` ke naam se add karke redeploy karna hoga. Free tier availability aur model access account ke mutabiq change ho sakti hai. Jab tak key nahi hoti route `503` deta hai. AI answer advice hai, accounting source of truth nahi. User apne prompt mein private information likh sakta hai, is liye UI mein us se bachne ki guidance deni chahiye. Day 3 mein approved tenant-scoped context aur tool design decide hoga.
+Vercel AI Gateway key ko frontend project mein `AI_GATEWAY_API_KEY` ke naam se add karke redeploy karna hoga. Gateway par free monthly credit aur model pricing account ke mutabiq change ho sakti hai. Jab tak key nahi hoti chat form hidden rehta hai aur route `503` deta hai. AI answer advice hai, accounting source of truth nahi. User apne prompt mein private information likh sakta hai, is liye UI us se bachne ko kehti hai. Day 3 mein approved tenant-scoped context aur tool design decide hoga.
 
 ### Interview questions
 
