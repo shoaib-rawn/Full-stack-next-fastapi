@@ -124,7 +124,7 @@ export function LedgerLiteAgent() {
             <label className="block text-sm font-bold">Name<input name="full_name" required minLength={2} maxLength={100} autoComplete="name" className="mt-1 w-full rounded-xl border border-[#a7cde2] p-3 font-normal" /></label>
             <label className="block text-sm font-bold">Email<input name="email" type="email" required autoComplete="email" className="mt-1 w-full rounded-xl border border-[#a7cde2] p-3 font-normal" /></label>
             <label className="block text-sm font-bold">Phone<input name="phone" type="tel" required minLength={8} maxLength={20} autoComplete="tel" className="mt-1 w-full rounded-xl border border-[#a7cde2] p-3 font-normal" /></label>
-            <p className="text-xs leading-5 text-[#58718c]">We save these details to allow guest chat. They are not sent to the AI model. Guest access lasts 24 hours.</p>
+            <p className="text-xs leading-5 text-[#58718c]">Name, email and phone are saved in our database until removed. They are not sent to the AI model, and chat messages are not stored. Guest access lasts 24 hours.</p>
             <button type="submit" disabled={registering} className="rounded-xl bg-[#1267c9] px-4 py-2 text-sm font-bold text-white disabled:opacity-60">{registering ? "Saving..." : "Start guest chat"}</button>
           </form>}
           {aiReady && accessMode !== null && accessMode !== "registration" && messages.length > 0 && <div ref={chatList} className="mt-4 flex max-h-64 flex-col gap-3 overflow-y-auto rounded-2xl bg-[#f4f9fd] p-3" role="log" aria-label="LedgerBot conversation" aria-live="polite">
