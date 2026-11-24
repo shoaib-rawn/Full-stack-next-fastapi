@@ -9,6 +9,7 @@ import { RequestOverlay } from "@/components/request-animation";
 import { login } from "@/lib/auth";
 import { withMinDuration } from "@/lib/demo-delay";
 import { clearSeen } from "@/lib/seen-sections";
+import { resetLedgerBotSession } from "@/lib/ledgerbot-client-session";
 import {
   loginSchema,
   type LoginFormValues,
@@ -67,8 +68,10 @@ export function LoginForm() {
 
     try {
       await withMinDuration(login(values));
+      await fetch("/api/assistant/guest", { method: "DELETE", signal: AbortSignal.timeout(4000) }).catch(() => null);
 
       queryClient.clear();
+      resetLedgerBotSession();
       clearSeen();
       localStorage.removeItem("ledgerlite:last-activity");
 

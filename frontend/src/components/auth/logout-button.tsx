@@ -8,6 +8,7 @@ import { RequestOverlay } from "@/components/request-animation";
 import { withMinDuration } from "@/lib/demo-delay";
 import { trackedFetch } from "@/lib/request-tracker";
 import { clearSeen } from "@/lib/seen-sections";
+import { resetLedgerBotSession } from "@/lib/ledgerbot-client-session";
 
 export function LogoutButton({ fullWidth = false }: { fullWidth?: boolean }) {
   const router = useRouter();
@@ -20,6 +21,8 @@ export function LogoutButton({ fullWidth = false }: { fullWidth?: boolean }) {
     setError("");
 
     try {
+      // Revoke any legacy guest cookie scoped to /api/assistant before account logout.
+      await fetch("/api/assistant/guest", { method: "DELETE", signal: AbortSignal.timeout(4000) }).catch(() => null);
       const response = await withMinDuration(
         trackedFetch("logout", "/api/auth/logout", {
           method: "POST",
@@ -34,6 +37,7 @@ export function LogoutButton({ fullWidth = false }: { fullWidth?: boolean }) {
         );
       }
       queryClient.clear();
+      resetLedgerBotSession();
       clearSeen();
       try {
         localStorage.removeItem("ledgerlite:last-activity");

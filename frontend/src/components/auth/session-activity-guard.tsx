@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { clearSeen } from "@/lib/seen-sections";
+import { resetLedgerBotSession } from "@/lib/ledgerbot-client-session";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -23,11 +24,13 @@ export function SessionActivityGuard() {
       localStorage.removeItem(LAST_ACTIVITY_KEY);
 
       try {
+        await fetch("/api/assistant/guest", { method: "DELETE", signal: AbortSignal.timeout(4000) }).catch(() => null);
         await fetch("/api/auth/logout", {
           method: "POST",
         });
       } finally {
         queryClient.clear();
+        resetLedgerBotSession();
         clearSeen();
         router.replace("/login?reason=idle");
         router.refresh();

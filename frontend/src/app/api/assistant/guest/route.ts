@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { clearGuestCookie, clearLegacyGuestCookie, revokeGuestToken } from "@/lib/assistant-guest-session";
 
 const apiUrl = process.env.API_URL ?? "http://127.0.0.1:8000";
 
@@ -69,11 +70,22 @@ export async function POST(request: Request) {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      path: "/api/assistant",
+      path: "/",
       maxAge: result.expires_in ?? 24 * 3600,
     });
+    clearLegacyGuestCookie(output);
     return output;
   } catch {
     return json({ detail: "Could not reach the guest service right now." }, 503);
   }
+}
+
+export async function DELETE() {
+  const token = (await cookies()).get("assistant_guest")?.value;
+  if (token && !(await revokeGuestToken(token))) {
+    return json({ detail: "Could not end guest chat right now. Please try again." }, 503);
+  }
+  const response = json({ message: "Guest chat ended." });
+  clearGuestCookie(response);
+  return response;
 }

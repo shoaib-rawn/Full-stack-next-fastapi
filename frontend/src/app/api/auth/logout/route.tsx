@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 import { backendJson, BffTrace } from "@/lib/bff-trace";
+import { clearGuestCookie, revokeGuestToken } from "@/lib/assistant-guest-session";
 
 const apiUrl =
   process.env.API_URL ?? "http://127.0.0.1:8000";
@@ -15,6 +16,14 @@ export async function POST() {
 
   const refreshToken =
     cookieStore.get("refresh_token")?.value;
+  const guestToken = cookieStore.get("assistant_guest")?.value;
+
+  async function endGuestChat(response: NextResponse) {
+    if (guestToken && !(await revokeGuestToken(guestToken))) {
+      console.error("ledgerbot.guest_revoke_failed_during_logout");
+    }
+    clearGuestCookie(response);
+  }
 
   if (!accessToken || !refreshToken) {
     const response = NextResponse.json({
@@ -23,6 +32,7 @@ export async function POST() {
 
     response.cookies.delete("access_token");
     response.cookies.delete("refresh_token");
+    await endGuestChat(response);
 
     trace.cookies("cleared");
 
@@ -60,6 +70,7 @@ export async function POST() {
 
   response.cookies.delete("access_token");
   response.cookies.delete("refresh_token");
+  await endGuestChat(response);
 
   trace.cookies("cleared");
 

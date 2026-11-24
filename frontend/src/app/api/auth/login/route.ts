@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { backendJson, BffTrace } from "@/lib/bff-trace";
+import { clearGuestCookie, revokeGuestToken } from "@/lib/assistant-guest-session";
 
 type TokenResponse = {
   access_token: string;
@@ -77,6 +78,12 @@ export async function POST(request: NextRequest) {
     maxAge: 7 * 24 * 60 * 60,
     path: "/",
   });
+
+  const guestToken = request.cookies.get("assistant_guest")?.value;
+  if (guestToken && !(await revokeGuestToken(guestToken))) {
+    console.error("ledgerbot.guest_revoke_failed_during_login");
+  }
+  clearGuestCookie(response);
 
   trace.cookies("set");
 

@@ -61,6 +61,8 @@ async def test_guest_details_are_saved_and_chat_requires_limited_session() -> No
             for _ in range(20):
                 assert (await client.post("/assistant/guest-session/consume", headers=headers)).status_code == 200
             assert (await client.post("/assistant/guest-session/consume", headers=headers)).status_code == 429
+            assert (await client.delete("/assistant/guest-session", headers=headers)).status_code == 204
+            assert (await client.get("/assistant/guest-session", headers=headers)).status_code == 401
     finally:
         app.dependency_overrides.pop(get_redis_client, None)
         async with async_session_factory() as session:

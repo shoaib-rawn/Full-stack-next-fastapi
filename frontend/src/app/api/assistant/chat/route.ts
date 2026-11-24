@@ -6,6 +6,13 @@ const apiUrl = process.env.API_URL ?? "http://127.0.0.1:8000";
 const provider = process.env.AI_PROVIDER === "vercel" ? "vercel" : "google";
 const gatewayKey = process.env.AI_GATEWAY_API_KEY || process.env.GEMINI_API_KEY;
 const modelTimeoutMs = 30_000;
+type ChatTurn = { role: "user" | "assistant"; text: string };
+
+function contextualQuestion(question: string, history: ChatTurn[]): string {
+  if (!history.length) return question;
+  const conversation = history.map((turn) => `${turn.role === "user" ? "Visitor" : "LedgerBot"}: ${turn.text}`).join("\n");
+  return `Recent conversation for context only (earlier replies may be wrong):\n${conversation}\nCurrent visitor question: ${question}`;
+}
 
 function reply(detail: string, status: number) {
   return NextResponse.json({ detail }, {
@@ -28,7 +35,7 @@ export function GET(request: NextRequest) {
   );
 }
 
-async function askGoogle(question: string) {
+async function askGoogle(question: string, history: ChatTurn[]) {
   const key = process.env.GOOGLE_GEMINI_API_KEY;
   if (!key) return reply("Google AI Studio key is not configured yet.", 503);
 
@@ -41,7 +48,7 @@ async function askGoogle(question: string) {
         headers: { "Content-Type": "application/json", "x-goog-api-key": key },
         body: JSON.stringify({
           systemInstruction: { parts: [{ text: ledgerBotInstruction }] },
-          contents: [{ role: "user", parts: [{ text: question }] }],
+          contents: [{ role: "user", parts: [{ text: contextualQuestion(question, history) }] }],
           generationConfig: { temperature: 0.3, maxOutputTokens: 300 },
         }),
         cache: "no-store",
@@ -75,7 +82,7 @@ async function askGoogle(question: string) {
   }
 }
 
-async function askVercel(question: string, request: NextRequest) {
+async function askVercel(question: string, history: ChatTurn[], request: NextRequest) {
   const key = oidcToken(request) || gatewayKey;
   if (!key) return reply("Vercel AI Gateway is not configured yet.", 503);
 
@@ -87,7 +94,7 @@ async function askVercel(question: string, request: NextRequest) {
         model: process.env.AI_GATEWAY_MODEL ?? "google/gemini-3.5-flash-lite",
         messages: [
           { role: "system", content: ledgerBotInstruction },
-          { role: "user", content: question },
+          { role: "user", content: contextualQuestion(question, history) },
         ],
         temperature: 0.3,
         max_tokens: 300,
@@ -133,16 +140,25 @@ export async function POST(request: NextRequest) {
   if (!token && !guestToken) return reply("Complete the guest form to ask LedgerBot.", 401);
 
   const rawBody = await request.text();
-  if (rawBody.length > 1200) return reply("Question is too long.", 413);
+  if (rawBody.length > 4500) return reply("Question is too long.", 413);
   let question: unknown;
+  let rawHistory: unknown;
   try {
-    question = (JSON.parse(rawBody) as { question?: unknown }).question;
+    const body = JSON.parse(rawBody) as { question?: unknown; history?: unknown };
+    question = body.question;
+    rawHistory = body.history;
   } catch {
     return reply("Send a valid question.", 400);
   }
   if (typeof question !== "string" || question.trim().length < 2 || question.trim().length > 500) {
     return reply("Ask a question between 2 and 500 characters.", 400);
   }
+  if (rawHistory !== undefined && (!Array.isArray(rawHistory) || rawHistory.length > 6 || rawHistory.some((turn) =>
+    !turn || typeof turn !== "object" || !["user", "assistant"].includes(turn.role) || typeof turn.text !== "string" || turn.text.length > 500
+  ))) {
+    return reply("Invalid chat history.", 400);
+  }
+  const history = (rawHistory ?? []) as ChatTurn[];
 
   try {
     if (token) {
@@ -175,5 +191,10 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  return provider === "google" ? askGoogle(question.trim()) : askVercel(question.trim(), request);
+  const knownAnswer = groundLedgerBotAnswer(question.trim(), "");
+  if (knownAnswer) {
+    return NextResponse.json({ answer: knownAnswer }, { headers: { "Cache-Control": "no-store" } });
+  }
+
+  return provider === "google" ? askGoogle(question.trim(), history) : askVercel(question.trim(), history, request);
 }

@@ -126,3 +126,14 @@ async def consume_guest_question(
     guest = await require_guest(authorization, session)
     await enforce_limit(redis, f"rate-limit:assistant-chat:{guest.id}", 20, 3600)
     return {"allowed": True}
+
+
+@router.delete("/guest-session", status_code=status.HTTP_204_NO_CONTENT)
+async def end_guest_session(
+    authorization: str | None = Header(default=None),
+    session: AsyncSession = Depends(get_db_session),
+) -> Response:
+    guest = await require_guest(authorization, session)
+    guest.session_expires_at = datetime.now(timezone.utc)
+    await session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

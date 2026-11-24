@@ -9,6 +9,7 @@ import { useForm } from "react-hook-form";
 import { RequestAnimation, RequestOverlay } from "@/components/request-animation";
 import { RevealZone } from "@/components/reveal-zone";
 import { clearSeen } from "@/lib/seen-sections";
+import { resetLedgerBotSession } from "@/lib/ledgerbot-client-session";
 import { withMinDuration } from "@/lib/demo-delay";
 import { trackedFetch } from "@/lib/request-tracker";
 
@@ -62,6 +63,7 @@ export function WorkspaceSettings({ isOwner }: { isOwner: boolean }) {
     setLogoutAllError("");
 
     try {
+      await fetch("/api/assistant/guest", { method: "DELETE", signal: AbortSignal.timeout(4000) }).catch(() => null);
       const response = await withMinDuration(
         trackedFetch("logout-all", "/api/auth/logout-all", { method: "POST" }),
       );
@@ -72,6 +74,7 @@ export function WorkspaceSettings({ isOwner }: { isOwner: boolean }) {
       }
 
       queryClient.clear();
+      resetLedgerBotSession();
       try {
         localStorage.removeItem("ledgerlite:last-activity");
       } catch {
