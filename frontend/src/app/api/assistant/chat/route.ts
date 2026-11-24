@@ -127,8 +127,10 @@ async function askVercel(question: string, request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const token = (await cookies()).get("access_token")?.value;
-  if (!token) return reply("Sign in to ask LedgerBot.", 401);
+  const cookieStore = await cookies();
+  const token = cookieStore.get("access_token")?.value;
+  const guestToken = cookieStore.get("assistant_guest")?.value;
+  if (!token && !guestToken) return reply("Complete the guest form to ask LedgerBot.", 401);
 
   const rawBody = await request.text();
   if (rawBody.length > 1200) return reply("Question is too long.", 413);
@@ -143,13 +145,25 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const auth = await fetch(`${apiUrl}/auth/me`, {
-      headers: { Authorization: `Bearer ${token}` },
-      cache: "no-store",
-      signal: AbortSignal.timeout(8000),
-    });
-    if (auth.status === 401 || auth.status === 403) return reply("Session expired. Please sign in again.", 401);
-    if (!auth.ok) return reply("LedgerBot cannot verify your session right now.", 503);
+    if (token) {
+      const auth = await fetch(`${apiUrl}/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+        cache: "no-store",
+        signal: AbortSignal.timeout(8000),
+      });
+      if (auth.status === 401 || auth.status === 403) return reply("Session expired. Please sign in again.", 401);
+      if (!auth.ok) return reply("LedgerBot cannot verify your session right now.", 503);
+    } else {
+      const guest = await fetch(`${apiUrl}/assistant/guest-session/consume`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${guestToken}` },
+        cache: "no-store",
+        signal: AbortSignal.timeout(8000),
+      });
+      if (guest.status === 401) return reply("Guest session expired. Please fill in the form again.", 401);
+      if (guest.status === 429) return reply("Guest chat limit reached. Please try again later.", 429);
+      if (!guest.ok) return reply("LedgerBot cannot verify guest access right now.", 503);
+    }
   } catch {
     return reply("LedgerBot cannot reach the API right now.", 503);
   }

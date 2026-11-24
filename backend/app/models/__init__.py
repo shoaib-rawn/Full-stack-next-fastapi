@@ -1,4 +1,5 @@
 from app.models.base import Base
+from app.models.assistant_guest import AssistantGuest
 from app.models.customer import Customer
 from app.models.invoice import Invoice
 from app.models.invoice_line_item import InvoiceLineItem
@@ -9,6 +10,7 @@ from app.models.user import User
 
 
 __all__ = [
+    "AssistantGuest",
     "Base",
     "Customer",
     "Invoice",

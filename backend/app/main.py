@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.middleware.request_logging import request_logging_middleware
 from app.api.routes.customers import router as customers_router
+from app.api.routes.assistant import router as assistant_router
 from app.api.routes.health import router as health_router
 from app.api.routes.invoices import router as invoices_router
 from app.api.routes.members import router as members_router
@@ -32,6 +33,7 @@ async def lifespan(_: FastAPI):
 
 
 openapi_tags = [
+    {"name": "Assistant", "description": "Short-lived guest access to LedgerBot."},
     {
         "name": "System",
         "description": "Check whether the API is running.",
@@ -102,6 +104,7 @@ app.add_middleware(
 app.middleware("http")(request_logging_middleware)
 
 app.include_router(health_router)
+app.include_router(assistant_router)
 app.include_router(customers_router)
 app.include_router(organizations_router)
 app.include_router(auth_router)
